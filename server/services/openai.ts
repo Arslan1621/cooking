@@ -1,9 +1,8 @@
 
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const genAI = new GoogleGenerativeAI(
-  process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || "default_key"
-);
+// Initialize Gemini API
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 
 interface RecipeGenerationParams {
   ingredients?: string[];
@@ -103,23 +102,25 @@ interface CalorieAnalysis {
 
 export async function generateRecipe(params: RecipeGenerationParams): Promise<GeneratedRecipe> {
   const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+  
   const systemPrompt = getRecipeSystemPrompt(params.chefMode);
   const userPrompt = buildRecipeUserPrompt(params);
+  
+  const fullPrompt = `${systemPrompt}\n\n${userPrompt}`;
 
   try {
-    const prompt = `${systemPrompt}\n\n${userPrompt}`;
-    const result = await model.generateContent(prompt);
+    const result = await model.generateContent(fullPrompt);
     const response = await result.response;
     const text = response.text();
     
     // Extract JSON from response
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
-      throw new Error("No valid JSON found in response");
+      throw new Error('No valid JSON found in response');
     }
     
-    const parsedResult = JSON.parse(jsonMatch[0]);
-    return validateAndFormatRecipe(parsedResult);
+    const jsonResult = JSON.parse(jsonMatch[0]);
+    return validateAndFormatRecipe(jsonResult);
   } catch (error) {
     throw new Error(`Failed to generate recipe: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
@@ -127,6 +128,7 @@ export async function generateRecipe(params: RecipeGenerationParams): Promise<Ge
 
 export async function generateMealPlan(params: MealPlanParams): Promise<MealPlan> {
   const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+  
   const systemPrompt = `You are MealPlanChef, an AI nutritionist and meal planning expert. Create personalized meal plans based on user goals, dietary restrictions, and nutritional needs. Always respond with valid JSON.`;
   
   const userPrompt = `Create a ${params.days}-day meal plan for:
@@ -165,20 +167,21 @@ export async function generateMealPlan(params: MealPlanParams): Promise<MealPlan
       "tips": string[]
     }`;
 
+  const fullPrompt = `${systemPrompt}\n\n${userPrompt}`;
+
   try {
-    const prompt = `${systemPrompt}\n\n${userPrompt}`;
-    const result = await model.generateContent(prompt);
+    const result = await model.generateContent(fullPrompt);
     const response = await result.response;
     const text = response.text();
     
     // Extract JSON from response
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
-      throw new Error("No valid JSON found in response");
+      throw new Error('No valid JSON found in response');
     }
     
-    const parsedResult = JSON.parse(jsonMatch[0]);
-    return parsedResult as MealPlan;
+    const jsonResult = JSON.parse(jsonMatch[0]);
+    return jsonResult as MealPlan;
   } catch (error) {
     throw new Error(`Failed to generate meal plan: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
@@ -186,6 +189,7 @@ export async function generateMealPlan(params: MealPlanParams): Promise<MealPlan
 
 export async function analyzeFood(base64Image: string): Promise<CalorieAnalysis> {
   const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+  
   const systemPrompt = `You are an expert nutritionist and food analyst. Analyze food images to identify ingredients, estimate portions, and calculate nutritional information. Be as accurate as possible with calorie and macro estimations.`;
 
   const userPrompt = `Analyze this food image and provide detailed nutritional information. Identify all visible foods, estimate portion sizes, and calculate calories and macronutrients.
@@ -205,27 +209,30 @@ export async function analyzeFood(base64Image: string): Promise<CalorieAnalysis>
     "confidence": number (0-1)
   }`;
 
-  try {
-    const imagePart = {
-      inlineData: {
-        data: base64Image,
-        mimeType: "image/jpeg"
-      }
-    };
+  const fullPrompt = `${systemPrompt}\n\n${userPrompt}`;
 
-    const prompt = `${systemPrompt}\n\n${userPrompt}`;
-    const result = await model.generateContent([prompt, imagePart]);
+  try {
+    const result = await model.generateContent([
+      fullPrompt,
+      {
+        inlineData: {
+          data: base64Image,
+          mimeType: "image/jpeg"
+        }
+      }
+    ]);
+    
     const response = await result.response;
     const text = response.text();
     
     // Extract JSON from response
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
-      throw new Error("No valid JSON found in response");
+      throw new Error('No valid JSON found in response');
     }
     
-    const parsedResult = JSON.parse(jsonMatch[0]);
-    return parsedResult as CalorieAnalysis;
+    const jsonResult = JSON.parse(jsonMatch[0]);
+    return jsonResult as CalorieAnalysis;
   } catch (error) {
     throw new Error(`Failed to analyze food image: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
