@@ -1,64 +1,71 @@
 import {
   users,
   recipes,
-  pantryItems,
-  mealPlans,
-  calorieEntries,
   savedRecipes,
+  calorieEntries,
+  mealPlans,
+  pantryItems,
   shoppingLists,
   type User,
   type UpsertUser,
   type Recipe,
   type InsertRecipe,
-  type PantryItem,
-  type InsertPantryItem,
-  type MealPlan,
-  type InsertMealPlan,
-  type CalorieEntry,
-  type InsertCalorieEntry,
   type SavedRecipe,
   type InsertSavedRecipe,
+  type CalorieEntry,
+  type InsertCalorieEntry,
+  type MealPlan,
+  type InsertMealPlan,
+  type PantryItem,
+  type InsertPantryItem,
   type ShoppingList,
   type InsertShoppingList,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, and, gte, lte } from "drizzle-orm";
+import { eq, and, desc, asc, gte, lte } from "drizzle-orm";
 
 export interface IStorage {
-  // User operations (mandatory for Replit Auth)
+  // User operations (required for Replit Auth)
   getUser(id: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser): Promise<User>;
-  
+  updateUserProfile(id: string, data: Partial<UpsertUser>): Promise<User>;
+
   // Recipe operations
   createRecipe(recipe: InsertRecipe): Promise<Recipe>;
   getRecipe(id: string): Promise<Recipe | undefined>;
   getUserRecipes(userId: string): Promise<Recipe[]>;
-  searchRecipes(userId: string, query: string): Promise<Recipe[]>;
-  
-  // Pantry operations
-  addPantryItem(item: InsertPantryItem): Promise<PantryItem>;
-  getUserPantryItems(userId: string): Promise<PantryItem[]>;
-  updatePantryItem(id: string, updates: Partial<InsertPantryItem>): Promise<PantryItem | undefined>;
-  deletePantryItem(id: string): Promise<void>;
-  
+  updateRecipe(id: string, data: Partial<InsertRecipe>): Promise<Recipe>;
+  deleteRecipe(id: string): Promise<void>;
+  searchRecipes(query: string, userId?: string): Promise<Recipe[]>;
+
+  // Saved recipes operations
+  saveRecipe(data: InsertSavedRecipe): Promise<SavedRecipe>;
+  getUserSavedRecipes(userId: string): Promise<(SavedRecipe & { recipe: Recipe })[]>;
+  unsaveRecipe(userId: string, recipeId: string): Promise<void>;
+
+  // Calorie tracking operations
+  createCalorieEntry(entry: InsertCalorieEntry): Promise<CalorieEntry>;
+  getUserCalorieEntries(userId: string, startDate?: Date, endDate?: Date): Promise<CalorieEntry[]>;
+  updateCalorieEntry(id: string, data: Partial<InsertCalorieEntry>): Promise<CalorieEntry>;
+  deleteCalorieEntry(id: string): Promise<void>;
+
   // Meal plan operations
   createMealPlan(mealPlan: InsertMealPlan): Promise<MealPlan>;
   getUserMealPlans(userId: string): Promise<MealPlan[]>;
   getMealPlan(id: string): Promise<MealPlan | undefined>;
-  
-  // Calorie tracking operations
-  addCalorieEntry(entry: InsertCalorieEntry): Promise<CalorieEntry>;
-  getUserCalorieEntries(userId: string, startDate: Date, endDate: Date): Promise<CalorieEntry[]>;
-  
-  // Saved recipes operations
-  saveRecipe(savedRecipe: InsertSavedRecipe): Promise<SavedRecipe>;
-  getUserSavedRecipes(userId: string): Promise<Recipe[]>;
-  unsaveRecipe(userId: string, recipeId: string): Promise<void>;
-  
+  updateMealPlan(id: string, data: Partial<InsertMealPlan>): Promise<MealPlan>;
+  deleteMealPlan(id: string): Promise<void>;
+
+  // Pantry operations
+  createPantryItem(item: InsertPantryItem): Promise<PantryItem>;
+  getUserPantryItems(userId: string): Promise<PantryItem[]>;
+  updatePantryItem(id: string, data: Partial<InsertPantryItem>): Promise<PantryItem>;
+  deletePantryItem(id: string): Promise<void>;
+
   // Shopping list operations
-  createShoppingList(shoppingList: InsertShoppingList): Promise<ShoppingList>;
+  createShoppingList(list: InsertShoppingList): Promise<ShoppingList>;
   getUserShoppingLists(userId: string): Promise<ShoppingList[]>;
-  updateShoppingList(id: string, updates: Partial<InsertShoppingList>): Promise<ShoppingList | undefined>;
+  updateShoppingList(id: string, data: Partial<InsertShoppingList>): Promise<ShoppingList>;
   deleteShoppingList(id: string): Promise<void>;
 }
 
@@ -84,6 +91,15 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
+  async updateUserProfile(id: string, data: Partial<UpsertUser>): Promise<User> {
+    const [user] = await db
+      .update(users)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(users.id, id))
+      .returning();
+    return user;
+  }
+
   // Recipe operations
   async createRecipe(recipe: InsertRecipe): Promise<Recipe> {
     const [newRecipe] = await db.insert(recipes).values(recipe).returning();
@@ -103,46 +119,104 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(recipes.createdAt));
   }
 
-  async searchRecipes(userId: string, query: string): Promise<Recipe[]> {
-    // Simple search implementation - in production, you might want full-text search
+  async updateRecipe(id: string, data: Partial<InsertRecipe>): Promise<Recipe> {
+    const [recipe] = await db
+      .update(recipes)
+      .set(data)
+      .where(eq(recipes.id, id))
+      .returning();
+    return recipe;
+  }
+
+  async deleteRecipe(id: string): Promise<void> {
+    await db.delete(recipes).where(eq(recipes.id, id));
+  }
+
+  async searchRecipes(query: string, userId?: string): Promise<Recipe[]> {
+    const conditions = [];
+    if (userId) {
+      conditions.push(eq(recipes.userId, userId));
+    }
+    
     return await db
       .select()
       .from(recipes)
-      .where(eq(recipes.userId, userId))
+      .where(and(...conditions))
       .orderBy(desc(recipes.createdAt));
   }
 
-  // Pantry operations
-  async addPantryItem(item: InsertPantryItem): Promise<PantryItem> {
-    const [newItem] = await db.insert(pantryItems).values(item).returning();
-    return newItem;
+  // Saved recipes operations
+  async saveRecipe(data: InsertSavedRecipe): Promise<SavedRecipe> {
+    const [savedRecipe] = await db.insert(savedRecipes).values(data).returning();
+    return savedRecipe;
   }
 
-  async getUserPantryItems(userId: string): Promise<PantryItem[]> {
+  async getUserSavedRecipes(userId: string): Promise<(SavedRecipe & { recipe: Recipe })[]> {
+    return await db
+      .select({
+        id: savedRecipes.id,
+        userId: savedRecipes.userId,
+        recipeId: savedRecipes.recipeId,
+        collectionName: savedRecipes.collectionName,
+        savedAt: savedRecipes.savedAt,
+        recipe: recipes,
+      })
+      .from(savedRecipes)
+      .innerJoin(recipes, eq(savedRecipes.recipeId, recipes.id))
+      .where(eq(savedRecipes.userId, userId))
+      .orderBy(desc(savedRecipes.savedAt));
+  }
+
+  async unsaveRecipe(userId: string, recipeId: string): Promise<void> {
+    await db
+      .delete(savedRecipes)
+      .where(and(eq(savedRecipes.userId, userId), eq(savedRecipes.recipeId, recipeId)));
+  }
+
+  // Calorie tracking operations
+  async createCalorieEntry(entry: InsertCalorieEntry): Promise<CalorieEntry> {
+    const [calorieEntry] = await db.insert(calorieEntries).values(entry).returning();
+    return calorieEntry;
+  }
+
+  async getUserCalorieEntries(
+    userId: string,
+    startDate?: Date,
+    endDate?: Date
+  ): Promise<CalorieEntry[]> {
+    const conditions = [eq(calorieEntries.userId, userId)];
+    
+    if (startDate) {
+      conditions.push(gte(calorieEntries.date, startDate));
+    }
+    if (endDate) {
+      conditions.push(lte(calorieEntries.date, endDate));
+    }
+
     return await db
       .select()
-      .from(pantryItems)
-      .where(eq(pantryItems.userId, userId))
-      .orderBy(desc(pantryItems.addedAt));
+      .from(calorieEntries)
+      .where(and(...conditions))
+      .orderBy(desc(calorieEntries.date));
   }
 
-  async updatePantryItem(id: string, updates: Partial<InsertPantryItem>): Promise<PantryItem | undefined> {
-    const [updated] = await db
-      .update(pantryItems)
-      .set(updates)
-      .where(eq(pantryItems.id, id))
+  async updateCalorieEntry(id: string, data: Partial<InsertCalorieEntry>): Promise<CalorieEntry> {
+    const [entry] = await db
+      .update(calorieEntries)
+      .set(data)
+      .where(eq(calorieEntries.id, id))
       .returning();
-    return updated;
+    return entry;
   }
 
-  async deletePantryItem(id: string): Promise<void> {
-    await db.delete(pantryItems).where(eq(pantryItems.id, id));
+  async deleteCalorieEntry(id: string): Promise<void> {
+    await db.delete(calorieEntries).where(eq(calorieEntries.id, id));
   }
 
   // Meal plan operations
   async createMealPlan(mealPlan: InsertMealPlan): Promise<MealPlan> {
-    const [newPlan] = await db.insert(mealPlans).values(mealPlan).returning();
-    return newPlan;
+    const [newMealPlan] = await db.insert(mealPlans).values(mealPlan).returning();
+    return newMealPlan;
   }
 
   async getUserMealPlans(userId: string): Promise<MealPlan[]> {
@@ -154,62 +228,54 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getMealPlan(id: string): Promise<MealPlan | undefined> {
-    const [plan] = await db.select().from(mealPlans).where(eq(mealPlans.id, id));
-    return plan;
+    const [mealPlan] = await db.select().from(mealPlans).where(eq(mealPlans.id, id));
+    return mealPlan;
   }
 
-  // Calorie tracking operations
-  async addCalorieEntry(entry: InsertCalorieEntry): Promise<CalorieEntry> {
-    const [newEntry] = await db.insert(calorieEntries).values(entry).returning();
-    return newEntry;
+  async updateMealPlan(id: string, data: Partial<InsertMealPlan>): Promise<MealPlan> {
+    const [mealPlan] = await db
+      .update(mealPlans)
+      .set(data)
+      .where(eq(mealPlans.id, id))
+      .returning();
+    return mealPlan;
   }
 
-  async getUserCalorieEntries(userId: string, startDate: Date, endDate: Date): Promise<CalorieEntry[]> {
+  async deleteMealPlan(id: string): Promise<void> {
+    await db.delete(mealPlans).where(eq(mealPlans.id, id));
+  }
+
+  // Pantry operations
+  async createPantryItem(item: InsertPantryItem): Promise<PantryItem> {
+    const [pantryItem] = await db.insert(pantryItems).values(item).returning();
+    return pantryItem;
+  }
+
+  async getUserPantryItems(userId: string): Promise<PantryItem[]> {
     return await db
       .select()
-      .from(calorieEntries)
-      .where(
-        and(
-          eq(calorieEntries.userId, userId),
-          gte(calorieEntries.date, startDate),
-          lte(calorieEntries.date, endDate)
-        )
-      )
-      .orderBy(desc(calorieEntries.date));
+      .from(pantryItems)
+      .where(eq(pantryItems.userId, userId))
+      .orderBy(asc(pantryItems.name));
   }
 
-  // Saved recipes operations
-  async saveRecipe(savedRecipe: InsertSavedRecipe): Promise<SavedRecipe> {
-    const [saved] = await db.insert(savedRecipes).values(savedRecipe).returning();
-    return saved;
+  async updatePantryItem(id: string, data: Partial<InsertPantryItem>): Promise<PantryItem> {
+    const [item] = await db
+      .update(pantryItems)
+      .set(data)
+      .where(eq(pantryItems.id, id))
+      .returning();
+    return item;
   }
 
-  async getUserSavedRecipes(userId: string): Promise<Recipe[]> {
-    const results = await db
-      .select({ recipe: recipes })
-      .from(savedRecipes)
-      .innerJoin(recipes, eq(savedRecipes.recipeId, recipes.id))
-      .where(eq(savedRecipes.userId, userId))
-      .orderBy(desc(savedRecipes.savedAt));
-    
-    return results.map(r => r.recipe);
-  }
-
-  async unsaveRecipe(userId: string, recipeId: string): Promise<void> {
-    await db
-      .delete(savedRecipes)
-      .where(
-        and(
-          eq(savedRecipes.userId, userId),
-          eq(savedRecipes.recipeId, recipeId)
-        )
-      );
+  async deletePantryItem(id: string): Promise<void> {
+    await db.delete(pantryItems).where(eq(pantryItems.id, id));
   }
 
   // Shopping list operations
-  async createShoppingList(shoppingList: InsertShoppingList): Promise<ShoppingList> {
-    const [newList] = await db.insert(shoppingLists).values(shoppingList).returning();
-    return newList;
+  async createShoppingList(list: InsertShoppingList): Promise<ShoppingList> {
+    const [shoppingList] = await db.insert(shoppingLists).values(list).returning();
+    return shoppingList;
   }
 
   async getUserShoppingLists(userId: string): Promise<ShoppingList[]> {
@@ -220,13 +286,13 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(shoppingLists.createdAt));
   }
 
-  async updateShoppingList(id: string, updates: Partial<InsertShoppingList>): Promise<ShoppingList | undefined> {
-    const [updated] = await db
+  async updateShoppingList(id: string, data: Partial<InsertShoppingList>): Promise<ShoppingList> {
+    const [list] = await db
       .update(shoppingLists)
-      .set(updates)
+      .set(data)
       .where(eq(shoppingLists.id, id))
       .returning();
-    return updated;
+    return list;
   }
 
   async deleteShoppingList(id: string): Promise<void> {

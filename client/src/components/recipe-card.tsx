@@ -1,185 +1,106 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Clock, Users, Flame, Heart, BookOpen, ShoppingCart } from "lucide-react";
-import { useMutation } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
-import { useToast } from "@/hooks/use-toast";
+import { Clock, Users, Heart, BookOpen, ShoppingCart } from "lucide-react";
 import type { Recipe } from "@shared/schema";
 
 interface RecipeCardProps {
   recipe: Recipe;
-  onSave?: () => void;
+  onSave?: (recipeId: string) => void;
+  onAddToShopping?: (recipeId: string) => void;
+  onView?: (recipeId: string) => void;
   showActions?: boolean;
-  variant?: "default" | "compact";
 }
 
 export default function RecipeCard({ 
   recipe, 
   onSave, 
-  showActions = true, 
-  variant = "default" 
+  onAddToShopping, 
+  onView,
+  showActions = true 
 }: RecipeCardProps) {
-  const { toast } = useToast();
-
-  const saveToCookbook = useMutation({
-    mutationFn: async () => {
-      const response = await apiRequest('POST', '/api/cookbook', {
-        recipeId: recipe.id,
-        collectionName: 'favorites',
-      });
-      return response.json();
-    },
-    onSuccess: () => {
-      toast({
-        title: "Saved to Cookbook! 📚",
-        description: "Recipe has been saved to your cookbook.",
-      });
-      onSave?.();
-    },
-    onError: (error) => {
-      toast({
-        title: "Save Failed",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-
-  const saveToShoppingList = useMutation({
-    mutationFn: async () => {
-      const response = await apiRequest('POST', '/api/shopping-lists', {
-        name: `Shopping List for ${recipe.title}`,
-        items: recipe.ingredients,
-      });
-      return response.json();
-    },
-    onSuccess: () => {
-      toast({
-        title: "Added to Shopping List! 🛒",
-        description: "All ingredients have been added to your shopping list.",
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: "Failed to Add",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-
-  if (variant === "compact") {
-    return (
-      <Card className="hover:shadow-md transition-shadow animate-slide-in-up">
-        <CardContent className="p-4">
-          <div className="flex items-center justify-between mb-2">
-            <h4 className="font-semibold text-gray-900 truncate">{recipe.title}</h4>
-            <Badge variant="secondary" className="text-xs">
-              {recipe.chefMode}
-            </Badge>
-          </div>
-          <p className="text-sm text-gray-600 mb-3 line-clamp-2">{recipe.description}</p>
-          <div className="flex items-center justify-between text-xs text-gray-500">
-            <div className="flex items-center space-x-3">
-              <span className="flex items-center">
-                <Clock className="h-3 w-3 mr-1" />
-                {(recipe.prepTime || 0) + (recipe.cookTime || 0)} min
-              </span>
-              <span className="flex items-center">
-                <Flame className="h-3 w-3 mr-1" />
-                {recipe.calories} cal
-              </span>
-            </div>
-            {showActions && (
-              <div className="flex space-x-1">
-                <Button 
-                  size="sm" 
-                  variant="ghost" 
-                  onClick={() => saveToCookbook.mutate()}
-                  disabled={saveToCookbook.isPending}
-                  className="h-6 w-6 p-0"
-                >
-                  <Heart className="h-3 w-3" />
-                </Button>
-                <Button 
-                  size="sm" 
-                  variant="ghost" 
-                  onClick={() => saveToShoppingList.mutate()}
-                  disabled={saveToShoppingList.isPending}
-                  className="h-6 w-6 p-0"
-                >
-                  <ShoppingCart className="h-3 w-3" />
-                </Button>
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
+  const totalTime = (recipe.prepTime || 0) + (recipe.cookTime || 0);
+  const macros = recipe.macros as any;
 
   return (
-    <Card className="hover:shadow-lg transition-shadow animate-slide-in-up">
-      <CardHeader>
+    <Card className="hover:shadow-lg transition-shadow duration-200 group">
+      <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="flex-1">
-            <CardTitle className="text-lg mb-2">{recipe.title}</CardTitle>
-            <CardDescription className="mb-3">{recipe.description}</CardDescription>
+            <CardTitle className="text-lg mb-2 group-hover:text-chef-orange transition-colors">
+              {recipe.title}
+            </CardTitle>
+            {recipe.description && (
+              <p className="text-sm text-gray-600 line-clamp-2">{recipe.description}</p>
+            )}
           </div>
-          <Badge variant="secondary" className="ml-2">
-            {recipe.chefMode}
-          </Badge>
+          {recipe.imageUrl && (
+            <img 
+              src={recipe.imageUrl} 
+              alt={recipe.title}
+              className="w-16 h-16 rounded-lg object-cover ml-3"
+            />
+          )}
         </div>
         
-        <div className="flex items-center space-x-4 text-sm text-gray-500">
-          <span className="flex items-center">
-            <Clock className="h-4 w-4 mr-1" />
-            {(recipe.prepTime || 0) + (recipe.cookTime || 0)} min
-          </span>
-          <span className="flex items-center">
-            <Users className="h-4 w-4 mr-1" />
-            {recipe.servings || 1} servings
-          </span>
-          <span className="flex items-center">
-            <Flame className="h-4 w-4 mr-1" />
-            {recipe.calories} cal
-          </span>
+        <div className="flex flex-wrap gap-2 mt-2">
+          {recipe.cuisine && (
+            <Badge variant="secondary" className="text-xs">
+              {recipe.cuisine}
+            </Badge>
+          )}
+          {recipe.difficulty && (
+            <Badge 
+              variant="outline" 
+              className={`text-xs ${
+                recipe.difficulty === 'easy' ? 'border-green-300 text-green-700' :
+                recipe.difficulty === 'medium' ? 'border-yellow-300 text-yellow-700' :
+                'border-red-300 text-red-700'
+              }`}
+            >
+              {recipe.difficulty}
+            </Badge>
+          )}
+          {recipe.mealType && (
+            <Badge variant="outline" className="text-xs">
+              {recipe.mealType}
+            </Badge>
+          )}
         </div>
       </CardHeader>
-      
+
       <CardContent className="space-y-4">
-        {/* Ingredients Preview */}
-        <div>
-          <h4 className="font-medium mb-2">Ingredients:</h4>
-          <div className="text-sm text-gray-600 space-y-1">
-            {recipe.ingredients?.slice(0, 3).map((ingredient, index) => (
-              <div key={index}>• {ingredient}</div>
-            ))}
-            {recipe.ingredients && recipe.ingredients.length > 3 && (
-              <div className="text-gray-500">+ {recipe.ingredients.length - 3} more ingredients...</div>
-            )}
+        {/* Recipe Stats */}
+        <div className="grid grid-cols-3 gap-4 text-sm">
+          <div className="flex items-center gap-1">
+            <Clock className="w-4 h-4 text-gray-500" />
+            <span>{totalTime || 'N/A'} min</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <Users className="w-4 h-4 text-gray-500" />
+            <span>{recipe.servings || 1} servings</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <span className="text-chef-orange font-medium">
+              {recipe.calories || 0} cal
+            </span>
           </div>
         </div>
 
-        {/* Nutrition Info */}
-        {recipe.macros && (
-          <div className="grid grid-cols-4 gap-2 text-xs">
-            <div className="text-center">
-              <div className="font-medium text-gray-900">{recipe.macros.protein || 0}g</div>
-              <div className="text-gray-500">Protein</div>
+        {/* Macros */}
+        {macros && (
+          <div className="grid grid-cols-3 gap-2 text-xs">
+            <div className="text-center p-2 bg-gray-50 rounded">
+              <div className="font-medium text-chef-orange">{macros.protein || 0}g</div>
+              <div className="text-gray-600">Protein</div>
             </div>
-            <div className="text-center">
-              <div className="font-medium text-gray-900">{recipe.macros.carbs || 0}g</div>
-              <div className="text-gray-500">Carbs</div>
+            <div className="text-center p-2 bg-gray-50 rounded">
+              <div className="font-medium text-chef-orange">{macros.carbs || 0}g</div>
+              <div className="text-gray-600">Carbs</div>
             </div>
-            <div className="text-center">
-              <div className="font-medium text-gray-900">{recipe.macros.fat || 0}g</div>
-              <div className="text-gray-500">Fat</div>
-            </div>
-            <div className="text-center">
-              <div className="font-medium text-gray-900">{recipe.macros.fiber || 0}g</div>
-              <div className="text-gray-500">Fiber</div>
+            <div className="text-center p-2 bg-gray-50 rounded">
+              <div className="font-medium text-chef-orange">{macros.fat || 0}g</div>
+              <div className="text-gray-600">Fat</div>
             </div>
           </div>
         )}
@@ -192,31 +113,39 @@ export default function RecipeCard({
                 {tag}
               </Badge>
             ))}
+            {recipe.tags.length > 3 && (
+              <Badge variant="outline" className="text-xs">
+                +{recipe.tags.length - 3} more
+              </Badge>
+            )}
           </div>
         )}
 
         {/* Actions */}
         {showActions && (
-          <div className="flex space-x-2 pt-2">
+          <div className="flex gap-2 pt-2">
             <Button 
-              onClick={() => saveToCookbook.mutate()}
-              disabled={saveToCookbook.isPending}
-              variant="outline"
-              size="sm"
+              variant="outline" 
+              size="sm" 
               className="flex-1"
+              onClick={() => onView?.(recipe.id)}
             >
-              <BookOpen className="h-4 w-4 mr-2" />
-              Save to Cookbook
+              <BookOpen className="w-4 h-4 mr-1" />
+              View
             </Button>
             <Button 
-              onClick={() => saveToShoppingList.mutate()}
-              disabled={saveToShoppingList.isPending}
-              variant="outline"
+              variant="outline" 
               size="sm"
-              className="flex-1"
+              onClick={() => onSave?.(recipe.id)}
             >
-              <ShoppingCart className="h-4 w-4 mr-2" />
-              Shopping List
+              <Heart className="w-4 h-4" />
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => onAddToShopping?.(recipe.id)}
+            >
+              <ShoppingCart className="w-4 h-4" />
             </Button>
           </div>
         )}

@@ -2,21 +2,9 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
-import { generateRecipe, generateMealPlan, analyzeFood } from "./services/openai";
-import { 
-  insertRecipeSchema, 
-  insertPantryItemSchema, 
-  insertMealPlanSchema, 
-  insertCalorieEntrySchema,
-  insertShoppingListSchema 
-} from "@shared/schema";
-import multer from "multer";
-
-// Configure multer for file uploads
-const upload = multer({ 
-  storage: multer.memoryStorage(),
-  limits: { fileSize: 10 * 1024 * 1024 } // 10MB limit
-});
+import { generateRecipe, generateMealPlan, analyzeFood, type RecipeGenerationParams, type MealPlanParams } from "./services/ai";
+import { insertRecipeSchema, insertCalorieEntrySchema, insertMealPlanSchema, insertPantryItemSchema, insertShoppingListSchema } from "@shared/schema";
+import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
@@ -34,29 +22,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Recipe generation routes
-  app.post('/api/recipes/generate', isAuthenticated, async (req: any, res) => {
+  // User profile routes
+  app.patch('/api/profile', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
-      const params = req.body;
-      
-      // Generate recipe using OpenAI
+      const user = await storage.updateUserProfile(userId, req.body);
+      res.json(user);
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      res.status(500).json({ message: "Failed to update profile" });
+    }
+  });
+
+  // Recipe routes
+  app.post('/api/recipes/generate', isAuthenticated, async (req: any, res) => {
+    try {
+      const params: RecipeGenerationParams = req.body;
       const generatedRecipe = await generateRecipe(params);
       
       // Save recipe to database
+      const userId = req.user.claims.sub;
       const recipe = await storage.createRecipe({
-        ...generatedRecipe,
         userId,
+        title: generatedRecipe.title,
+        description: generatedRecipe.description,
+        ingredients: generatedRecipe.ingredients,
+        instructions: generatedRecipe.instructions,
+        prepTime: generatedRecipe.prepTime,
+        cookTime: generatedRecipe.cookTime,
+        servings: generatedRecipe.servings,
+        calories: generatedRecipe.calories,
+        macros: generatedRecipe.macros,
+        tags: generatedRecipe.tags,
         chefMode: params.chefMode,
-        mealType: params.mealType,
+        difficulty: generatedRecipe.difficulty,
+        cuisine: generatedRecipe.cuisine,
+        mealType: params.mealType || null,
       });
       
       res.json(recipe);
     } catch (error) {
-      console.error("Recipe generation error:", error);
-      res.status(500).json({ 
-        message: error instanceof Error ? error.message : "Failed to generate recipe" 
-      });
+      console.error("Error generating recipe:", error);
+      res.status(500).json({ message: "Failed to generate recipe" });
     }
   });
 
@@ -84,6 +91,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.delete('/api/recipes/:id', isAuthenticated, async (req, res) => {
+    try {
+      await storage.deleteRecipe(req.params.id);
+      res.json({ message: "Recipe deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting recipe:", error);
+      res.status(500).json({ message: "Failed to delete recipe" });
+    }
+  });
+
+  // Saved recipes routes
+  app.post('/api/recipes/:id/save', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const recipeId = req.params.id;
+      const { collectionName } = req.body;
+      
+      const savedRecipe = await storage.saveRecipe({
+        userId,
+        recipeId,
+        collectionName: collectionName || "favorites",
+      });
+      
+      res.json(savedRecipe);
+    } catch (error) {
+      console.error("Error saving recipe:", error);
+      res.status(500).json({ message: "Failed to save recipe" });
+    }
+  });
+
+  app.get('/api/saved-recipes', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const savedRecipes = await storage.getUserSavedRecipes(userId);
+      res.json(savedRecipes);
+    } catch (error) {
+      console.error("Error fetching saved recipes:", error);
+      res.status(500).json({ message: "Failed to fetch saved recipes" });
+    }
+  });
+
+  app.delete('/api/recipes/:id/save', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const recipeId = req.params.id;
+      await storage.unsaveRecipe(userId, recipeId);
+      res.json({ message: "Recipe unsaved successfully" });
+    } catch (error) {
+      console.error("Error unsaving recipe:", error);
+      res.status(500).json({ message: "Failed to unsave recipe" });
+    }
+  });
+
   // Meal plan routes
   app.post('/api/meal-plans/generate', isAuthenticated, async (req: any, res) => {
     try {
@@ -91,21 +151,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const user = await storage.getUser(userId);
       
       if (!user) {
-        return res.status(404).json({ message: "User not found" });
+        return res.status(400).json({ message: "User profile not found. Please complete your profile first." });
       }
-      
-      const params = {
+
+      const params: MealPlanParams = {
         ...req.body,
         userStats: {
           age: user.age || 30,
           gender: user.gender || 'male',
-          weight: parseFloat(user.weight || '70'),
+          weight: parseFloat(user.weight?.toString() || '70'),
           height: user.height || 175,
-        }
+        },
       };
       
-      // Generate meal plan using OpenAI
-      const generatedPlan = await generateMealPlan(params);
+      const generatedMealPlan = await generateMealPlan(params);
       
       // Save meal plan to database
       const mealPlan = await storage.createMealPlan({
@@ -115,16 +174,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         endDate: new Date(Date.now() + params.days * 24 * 60 * 60 * 1000),
         goal: params.goal,
         dietaryRestrictions: params.dietaryRestrictions,
-        meals: generatedPlan.meals,
-        shoppingList: generatedPlan.shoppingList,
+        meals: generatedMealPlan,
+        shoppingList: generatedMealPlan.shoppingList,
       });
       
-      res.json({ ...generatedPlan, id: mealPlan.id });
+      res.json(mealPlan);
     } catch (error) {
-      console.error("Meal plan generation error:", error);
-      res.status(500).json({ 
-        message: error instanceof Error ? error.message : "Failed to generate meal plan" 
-      });
+      console.error("Error generating meal plan:", error);
+      res.status(500).json({ message: "Failed to generate meal plan" });
     }
   });
 
@@ -139,38 +196,113 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Pantry management routes
+  app.get('/api/meal-plans/:id', isAuthenticated, async (req, res) => {
+    try {
+      const mealPlan = await storage.getMealPlan(req.params.id);
+      if (!mealPlan) {
+        return res.status(404).json({ message: "Meal plan not found" });
+      }
+      res.json(mealPlan);
+    } catch (error) {
+      console.error("Error fetching meal plan:", error);
+      res.status(500).json({ message: "Failed to fetch meal plan" });
+    }
+  });
+
+  // Calorie tracking routes
+  app.post('/api/calories/analyze-photo', isAuthenticated, async (req: any, res) => {
+    try {
+      const { image } = req.body;
+      const analysis = await analyzeFood(image);
+      res.json(analysis);
+    } catch (error) {
+      console.error("Error analyzing food photo:", error);
+      res.status(500).json({ message: "Failed to analyze food photo" });
+    }
+  });
+
+  app.post('/api/calories', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const entryData = insertCalorieEntrySchema.parse({
+        ...req.body,
+        userId,
+      });
+      
+      const entry = await storage.createCalorieEntry(entryData);
+      res.json(entry);
+    } catch (error) {
+      console.error("Error creating calorie entry:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create calorie entry" });
+    }
+  });
+
+  app.get('/api/calories', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { startDate, endDate } = req.query;
+      
+      const entries = await storage.getUserCalorieEntries(
+        userId,
+        startDate ? new Date(startDate as string) : undefined,
+        endDate ? new Date(endDate as string) : undefined
+      );
+      
+      res.json(entries);
+    } catch (error) {
+      console.error("Error fetching calorie entries:", error);
+      res.status(500).json({ message: "Failed to fetch calorie entries" });
+    }
+  });
+
+  app.delete('/api/calories/:id', isAuthenticated, async (req, res) => {
+    try {
+      await storage.deleteCalorieEntry(req.params.id);
+      res.json({ message: "Calorie entry deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting calorie entry:", error);
+      res.status(500).json({ message: "Failed to delete calorie entry" });
+    }
+  });
+
+  // Pantry routes
+  app.post('/api/pantry', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const itemData = insertPantryItemSchema.parse({
+        ...req.body,
+        userId,
+      });
+      
+      const item = await storage.createPantryItem(itemData);
+      res.json(item);
+    } catch (error) {
+      console.error("Error creating pantry item:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create pantry item" });
+    }
+  });
+
   app.get('/api/pantry', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
-      const pantryItems = await storage.getUserPantryItems(userId);
-      res.json(pantryItems);
+      const items = await storage.getUserPantryItems(userId);
+      res.json(items);
     } catch (error) {
       console.error("Error fetching pantry items:", error);
       res.status(500).json({ message: "Failed to fetch pantry items" });
     }
   });
 
-  app.post('/api/pantry', isAuthenticated, async (req: any, res) => {
+  app.patch('/api/pantry/:id', isAuthenticated, async (req, res) => {
     try {
-      const userId = req.user.claims.sub;
-      const validatedData = insertPantryItemSchema.parse({ ...req.body, userId });
-      const pantryItem = await storage.addPantryItem(validatedData);
-      res.json(pantryItem);
-    } catch (error) {
-      console.error("Error adding pantry item:", error);
-      res.status(500).json({ message: "Failed to add pantry item" });
-    }
-  });
-
-  app.put('/api/pantry/:id', isAuthenticated, async (req, res) => {
-    try {
-      const validatedData = insertPantryItemSchema.partial().parse(req.body);
-      const pantryItem = await storage.updatePantryItem(req.params.id, validatedData);
-      if (!pantryItem) {
-        return res.status(404).json({ message: "Pantry item not found" });
-      }
-      res.json(pantryItem);
+      const item = await storage.updatePantryItem(req.params.id, req.body);
+      res.json(item);
     } catch (error) {
       console.error("Error updating pantry item:", error);
       res.status(500).json({ message: "Failed to update pantry item" });
@@ -180,140 +312,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete('/api/pantry/:id', isAuthenticated, async (req, res) => {
     try {
       await storage.deletePantryItem(req.params.id);
-      res.json({ message: "Pantry item deleted" });
+      res.json({ message: "Pantry item deleted successfully" });
     } catch (error) {
       console.error("Error deleting pantry item:", error);
       res.status(500).json({ message: "Failed to delete pantry item" });
     }
   });
 
-  // Calorie tracking routes
-  app.post('/api/calories/analyze-photo', isAuthenticated, upload.single('image'), async (req: any, res) => {
-    try {
-      if (!req.file) {
-        return res.status(400).json({ message: "No image file provided" });
-      }
-      
-      const userId = req.user.claims.sub;
-      const base64Image = req.file.buffer.toString('base64');
-      
-      // Analyze food using OpenAI Vision
-      const analysis = await analyzeFood(base64Image);
-      
-      // Save calorie entries to database
-      const entries = [];
-      for (const food of analysis.foods) {
-        const entry = await storage.addCalorieEntry({
-          userId,
-          date: new Date(),
-          mealType: req.body.mealType || 'snack',
-          foodName: food.name,
-          calories: food.calories,
-          macros: food.macros,
-          quantity: parseFloat(food.quantity) || 1,
-          unit: food.quantity.replace(/[0-9.-]/g, '').trim() || 'portion',
-          source: 'ai-photo',
-        });
-        entries.push(entry);
-      }
-      
-      res.json({ analysis, entries });
-    } catch (error) {
-      console.error("Photo analysis error:", error);
-      res.status(500).json({ 
-        message: error instanceof Error ? error.message : "Failed to analyze photo" 
-      });
-    }
-  });
-
-  app.post('/api/calories/manual', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const validatedData = insertCalorieEntrySchema.parse({ ...req.body, userId });
-      const entry = await storage.addCalorieEntry(validatedData);
-      res.json(entry);
-    } catch (error) {
-      console.error("Error adding calorie entry:", error);
-      res.status(500).json({ message: "Failed to add calorie entry" });
-    }
-  });
-
-  app.get('/api/calories', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const startDate = new Date(req.query.startDate as string);
-      const endDate = new Date(req.query.endDate as string);
-      
-      const entries = await storage.getUserCalorieEntries(userId, startDate, endDate);
-      res.json(entries);
-    } catch (error) {
-      console.error("Error fetching calorie entries:", error);
-      res.status(500).json({ message: "Failed to fetch calorie entries" });
-    }
-  });
-
-  // Cookbook routes (saved recipes)
-  app.get('/api/cookbook', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const savedRecipes = await storage.getUserSavedRecipes(userId);
-      res.json(savedRecipes);
-    } catch (error) {
-      console.error("Error fetching cookbook:", error);
-      res.status(500).json({ message: "Failed to fetch cookbook" });
-    }
-  });
-
-  app.post('/api/cookbook', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const { recipeId, collectionName } = req.body;
-      
-      const savedRecipe = await storage.saveRecipe({
-        userId,
-        recipeId,
-        collectionName: collectionName || 'favorites',
-      });
-      
-      res.json(savedRecipe);
-    } catch (error) {
-      console.error("Error saving recipe:", error);
-      res.status(500).json({ message: "Failed to save recipe" });
-    }
-  });
-
-  app.delete('/api/cookbook/:recipeId', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      await storage.unsaveRecipe(userId, req.params.recipeId);
-      res.json({ message: "Recipe removed from cookbook" });
-    } catch (error) {
-      console.error("Error removing recipe from cookbook:", error);
-      res.status(500).json({ message: "Failed to remove recipe from cookbook" });
-    }
-  });
-
   // Shopping list routes
+  app.post('/api/shopping-lists', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const listData = insertShoppingListSchema.parse({
+        ...req.body,
+        userId,
+      });
+      
+      const list = await storage.createShoppingList(listData);
+      res.json(list);
+    } catch (error) {
+      console.error("Error creating shopping list:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create shopping list" });
+    }
+  });
+
   app.get('/api/shopping-lists', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
-      const shoppingLists = await storage.getUserShoppingLists(userId);
-      res.json(shoppingLists);
+      const lists = await storage.getUserShoppingLists(userId);
+      res.json(lists);
     } catch (error) {
       console.error("Error fetching shopping lists:", error);
       res.status(500).json({ message: "Failed to fetch shopping lists" });
     }
   });
 
-  app.post('/api/shopping-lists', isAuthenticated, async (req: any, res) => {
+  app.patch('/api/shopping-lists/:id', isAuthenticated, async (req, res) => {
     try {
-      const userId = req.user.claims.sub;
-      const validatedData = insertShoppingListSchema.parse({ ...req.body, userId });
-      const shoppingList = await storage.createShoppingList(validatedData);
-      res.json(shoppingList);
+      const list = await storage.updateShoppingList(req.params.id, req.body);
+      res.json(list);
     } catch (error) {
-      console.error("Error creating shopping list:", error);
-      res.status(500).json({ message: "Failed to create shopping list" });
+      console.error("Error updating shopping list:", error);
+      res.status(500).json({ message: "Failed to update shopping list" });
+    }
+  });
+
+  app.delete('/api/shopping-lists/:id', isAuthenticated, async (req, res) => {
+    try {
+      await storage.deleteShoppingList(req.params.id);
+      res.json({ message: "Shopping list deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting shopping list:", error);
+      res.status(500).json({ message: "Failed to delete shopping list" });
     }
   });
 

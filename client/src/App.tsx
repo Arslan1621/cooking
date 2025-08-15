@@ -1,64 +1,91 @@
 import { Switch, Route } from "wouter";
-import { queryClient } from "./lib/queryClient";
-import { QueryClientProvider } from "@tanstack/react-query";
-import { Toaster } from "@/components/ui/toaster";
-import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
-import NotFound from "@/pages/not-found";
+import { Navigation } from "@/components/Navigation";
+import { Footer } from "@/components/Footer";
+import { Toaster } from "@/components/ui/toaster";
 import Landing from "@/pages/landing";
-import Home from "@/pages/home";
+import Dashboard from "@/pages/dashboard";
 import PantryChef from "@/pages/pantry-chef";
 import MealPlanChef from "@/pages/meal-plan-chef";
 import MasterChef from "@/pages/master-chef";
 import MacrosChef from "@/pages/macros-chef";
 import MixologyMaestro from "@/pages/mixology-maestro";
-import CalorieTracker from "@/pages/calorie-tracker";
-import PantryManager from "@/pages/pantry-manager";
-import Cookbook from "@/pages/cookbook";
+import CalorieTracking from "@/pages/calorie-tracker";
 import Pricing from "@/pages/pricing";
-import Blog from "@/pages/blog";
-import FAQ from "@/pages/faq";
+import Profile from "@/pages/Profile";
+import Recipes from "@/pages/Recipes";
+import Pantry from "@/pages/pantry";
+import NotFound from "@/pages/not-found";
+import { LoadingSpinner } from "@/components/LoadingSpinner";
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      retry: 1,
+    },
+  },
+});
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <LoadingSpinner size="lg" className="mx-auto mb-4" />
+          <p className="text-gray-600">Loading ChefGPT...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <Switch>
-      {isLoading || !isAuthenticated ? (
-        <>
-          <Route path="/" component={Landing} />
-          <Route path="/pricing" component={Pricing} />
-          <Route path="/blog" component={Blog} />
-          <Route path="/faq" component={FAQ} />
-        </>
-      ) : (
-        <>
-          <Route path="/" component={Home} />
-          <Route path="/pantry-chef" component={PantryChef} />
-          <Route path="/meal-plan-chef" component={MealPlanChef} />
-          <Route path="/master-chef" component={MasterChef} />
-          <Route path="/macros-chef" component={MacrosChef} />
-          <Route path="/mixology-maestro" component={MixologyMaestro} />
-          <Route path="/calorie-tracker" component={CalorieTracker} />
-          <Route path="/pantry" component={PantryManager} />
-          <Route path="/cookbook" component={Cookbook} />
-          <Route path="/pricing" component={Pricing} />
-          <Route path="/blog" component={Blog} />
-          <Route path="/faq" component={FAQ} />
-        </>
-      )}
-      <Route component={NotFound} />
-    </Switch>
+    <div className="min-h-screen flex flex-col">
+      <Navigation />
+      <main className="flex-1">
+        <Switch>
+          {!isAuthenticated ? (
+            <>
+              <Route path="/" component={Landing} />
+              <Route path="/pricing" component={Pricing} />
+              <Route path="/pantry-chef" component={PantryChef} />
+              <Route path="/meal-plan-chef" component={MealPlanChef} />
+              <Route path="/master-chef" component={MasterChef} />
+              <Route path="/macros-chef" component={MacrosChef} />
+              <Route path="/mixology" component={MixologyMaestro} />
+            </>
+          ) : (
+            <>
+              <Route path="/" component={Dashboard} />
+              <Route path="/dashboard" component={Dashboard} />
+              <Route path="/pantry-chef" component={PantryChef} />
+              <Route path="/meal-plan-chef" component={MealPlanChef} />
+              <Route path="/master-chef" component={MasterChef} />
+              <Route path="/macros-chef" component={MacrosChef} />
+              <Route path="/mixology" component={MixologyMaestro} />
+              <Route path="/calories" component={CalorieTracking} />
+              <Route path="/recipes" component={Recipes} />
+              <Route path="/pantry" component={Pantry} />
+              <Route path="/profile" component={Profile} />
+              <Route path="/pricing" component={Pricing} />
+            </>
+          )}
+          <Route component={NotFound} />
+        </Switch>
+      </main>
+      <Footer />
+      <Toaster />
+    </div>
   );
 }
 
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Router />
-      </TooltipProvider>
+      <Router />
     </QueryClientProvider>
   );
 }

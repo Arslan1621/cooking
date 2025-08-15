@@ -11,6 +11,12 @@ export default {
         sm: "calc(var(--radius) - 4px)",
       },
       colors: {
+        // Chef color scheme
+        'chef-orange': '#F97316',
+        'chef-red': '#EF4444', 
+        'chef-gray': '#F8FAFC',
+        
+        // Shadcn color system
         background: "var(--background)",
         foreground: "var(--foreground)",
         card: {
@@ -46,7 +52,7 @@ export default {
         ring: "var(--ring)",
         chart: {
           "1": "var(--chart-1)",
-          "2": "var(--chart-2)",
+          "2": "var(--chart-2)", 
           "3": "var(--chart-3)",
           "4": "var(--chart-4)",
           "5": "var(--chart-5)",
@@ -61,13 +67,9 @@ export default {
           border: "var(--sidebar-border)",
           ring: "var(--sidebar-ring)",
         },
-        // ChefGPT custom colors
-        "chef-orange": "var(--chef-orange)",
-        "chef-red": "var(--chef-red)",
-        "chef-gray": "var(--chef-gray)",
       },
       fontFamily: {
-        sans: ["var(--font-sans)"],
+        sans: ['Inter', 'system-ui', 'sans-serif'],
         serif: ["var(--font-serif)"],
         mono: ["var(--font-mono)"],
       },
@@ -88,10 +90,28 @@ export default {
             height: "0",
           },
         },
-        "slide-in-up": {
+        ripple: {
+          "0%": {
+            transform: "scale(0)",
+            opacity: "1",
+          },
+          "100%": {
+            transform: "scale(4)",
+            opacity: "0",
+          },
+        },
+        shimmer: {
+          "0%": {
+            left: "-100%",
+          },
+          "100%": {
+            left: "100%",
+          },
+        },
+        fadeIn: {
           "0%": {
             opacity: "0",
-            transform: "translateY(20px)",
+            transform: "translateY(10px)",
           },
           "100%": {
             opacity: "1",
@@ -102,7 +122,20 @@ export default {
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
-        "slide-in-up": "slide-in-up 0.3s ease-out",
+        ripple: "ripple 0.6s linear",
+        shimmer: "shimmer 2s infinite",
+        fadeIn: "fadeIn 0.5s ease-out",
+      },
+      aspectRatio: {
+        'food': '16 / 10',
+      },
+      backgroundImage: {
+        'chef-gradient': 'linear-gradient(135deg, #F97316 0%, #EA580C 100%)',
+        'pantry-gradient': 'linear-gradient(135deg, #EAB308 0%, #F97316 100%)',
+        'master-gradient': 'linear-gradient(135deg, #EF4444 0%, #EC4899 100%)',
+        'macros-gradient': 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
+        'mixology-gradient': 'linear-gradient(135deg, #8B5CF6 0%, #A855F7 100%)',
+        'meal-plan-gradient': 'linear-gradient(135deg, #F97316 0%, #EAB308 100%)',
       },
     },
   },

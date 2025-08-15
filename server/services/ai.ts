@@ -1,9 +1,11 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import OpenAI from "openai";
 
-// Initialize Gemini API
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
+// the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+const openai = new OpenAI({ 
+  apiKey: process.env.OPENAI_API_KEY || process.env.GEMINI_API_KEY || "" 
+});
 
-interface RecipeGenerationParams {
+export interface RecipeGenerationParams {
   ingredients?: string[];
   mealType?: string;
   cuisine?: string;
@@ -20,9 +22,10 @@ interface RecipeGenerationParams {
     carbs?: number;
     fat?: number;
   };
+  allInMode?: boolean;
 }
 
-interface GeneratedRecipe {
+export interface GeneratedRecipe {
   title: string;
   description: string;
   ingredients: string[];
@@ -43,7 +46,7 @@ interface GeneratedRecipe {
   tips?: string[];
 }
 
-interface MealPlanParams {
+export interface MealPlanParams {
   days: number;
   goal: string;
   dietaryRestrictions: string[];
@@ -60,7 +63,7 @@ interface MealPlanParams {
   };
 }
 
-interface MealPlan {
+export interface MealPlan {
   totalCalories: number;
   dailyMacros: {
     protein: number;
@@ -77,7 +80,7 @@ interface MealPlan {
   tips: string[];
 }
 
-interface CalorieAnalysis {
+export interface CalorieAnalysis {
   foods: Array<{
     name: string;
     quantity: string;
@@ -100,38 +103,55 @@ interface CalorieAnalysis {
 }
 
 export async function generateRecipe(params: RecipeGenerationParams): Promise<GeneratedRecipe> {
-  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-
   const systemPrompt = getRecipeSystemPrompt(params.chefMode);
   const userPrompt = buildRecipeUserPrompt(params);
 
-  const fullPrompt = `${systemPrompt}\n\n${userPrompt}`;
-
   try {
-    const result = await model.generateContent(fullPrompt);
-    const response = await result.response;
-    const text = response.text();
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [
+        {
+          role: "system",
+          content: systemPrompt,
+        },
+        {
+          role: "user",
+          content: userPrompt,
+        },
+      ],
+      response_format: { type: "json_object" },
+    });
 
-    // Extract JSON from response
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
-      throw new Error('No valid JSON found in response');
-    }
-
-    const jsonResult = JSON.parse(jsonMatch[0]);
-    return validateAndFormatRecipe(jsonResult);
+    const result = JSON.parse(response.choices[0].message.content || "{}");
+    return validateAndFormatRecipe(result);
   } catch (error) {
+    console.error("Error generating recipe:", error);
     throw new Error(`Failed to generate recipe: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }
 
 export async function generateMealPlan(params: MealPlanParams): Promise<MealPlan> {
-  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-
   const systemPrompt = `You are MealPlanChef, an AI nutritionist and meal planning expert. Create personalized meal plans based on user goals, dietary restrictions, and nutritional needs. Always respond with valid JSON.`;
+
+  // Calculate BMR and daily calories
+  const bmr = params.userStats.gender === "male" 
+    ? (88.362 + (13.397 * params.userStats.weight) + (4.799 * params.userStats.height) - (5.677 * params.userStats.age))
+    : (447.593 + (9.247 * params.userStats.weight) + (3.098 * params.userStats.height) - (4.330 * params.userStats.age));
+  
+  const activityMultipliers = {
+    sedentary: 1.2,
+    lightly_active: 1.375,
+    moderately_active: 1.55,
+    very_active: 1.725,
+    extremely_active: 1.9
+  };
+  
+  const activityLevel = params.activityLevel.toLowerCase().replace(' ', '_') as keyof typeof activityMultipliers;
+  const dailyCalories = Math.round(bmr * (activityMultipliers[activityLevel] || 1.375));
 
   const userPrompt = `Create a ${params.days}-day meal plan for:
     - Goal: ${params.goal}
+    - Daily calorie target: ${dailyCalories}
     - Dietary restrictions: ${params.dietaryRestrictions.join(', ') || 'None'}
     - Activity level: ${params.activityLevel}
     - User stats: ${params.userStats.gender}, ${params.userStats.age} years, ${params.userStats.weight}kg, ${params.userStats.height}cm
@@ -140,7 +160,7 @@ export async function generateMealPlan(params: MealPlanParams): Promise<MealPlan
 
     Respond with JSON in this format:
     {
-      "totalCalories": number,
+      "totalCalories": ${dailyCalories},
       "dailyMacros": { "protein": number, "carbs": number, "fat": number, "fiber": number },
       "meals": [
         {
@@ -166,87 +186,60 @@ export async function generateMealPlan(params: MealPlanParams): Promise<MealPlan
       "tips": string[]
     }`;
 
-  const fullPrompt = `${systemPrompt}\n\n${userPrompt}`;
-
-  let text = '';
   try {
-    const result = await model.generateContent(fullPrompt);
-    const response = await result.response;
-    text = response.text();
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [
+        {
+          role: "system",
+          content: systemPrompt,
+        },
+        {
+          role: "user",
+          content: userPrompt,
+        },
+      ],
+      response_format: { type: "json_object" },
+    });
 
-    // Extract JSON from response
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
-      throw new Error('No valid JSON found in response');
-    }
-
-    let jsonText = jsonMatch[0];
-    
-    // Clean up common JSON formatting issues
-    jsonText = jsonText
-      .replace(/,(\s*[}\]])/g, '$1') // Remove trailing commas
-      .replace(/([{,]\s*)(\w+):/g, '$1"$2":') // Add quotes around unquoted keys
-      .replace(/:\s*'([^']*)'/g, ': "$1"') // Replace single quotes with double quotes
-      .replace(/\n/g, ' ') // Remove newlines
-      .replace(/\s+/g, ' '); // Normalize whitespace
-
-    const jsonResult = JSON.parse(jsonText);
-    return jsonResult as MealPlan;
+    const result = JSON.parse(response.choices[0].message.content || "{}");
+    return result as MealPlan;
   } catch (error) {
-    console.error('Raw response text:', text);
-    console.error('JSON parsing error:', error);
+    console.error("Error generating meal plan:", error);
     throw new Error(`Failed to generate meal plan: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }
 
 export async function analyzeFood(base64Image: string): Promise<CalorieAnalysis> {
-  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-
-  const systemPrompt = `You are an expert nutritionist and food analyst. Analyze food images to identify ingredients, estimate portions, and calculate nutritional information. Be as accurate as possible with calorie and macro estimations.`;
-
-  const userPrompt = `Analyze this food image and provide detailed nutritional information. Identify all visible foods, estimate portion sizes, and calculate calories and macronutrients.
-
-  Respond with JSON in this format:
-  {
-    "foods": [
-      {
-        "name": string,
-        "quantity": string,
-        "calories": number,
-        "macros": { "protein": number, "carbs": number, "fat": number, "fiber": number }
-      }
-    ],
-    "totalCalories": number,
-    "totalMacros": { "protein": number, "carbs": number, "fat": number, "fiber": number },
-    "confidence": number (0-1)
-  }`;
-
-  const fullPrompt = `${systemPrompt}\n\n${userPrompt}`;
-
   try {
-    const result = await model.generateContent([
-      fullPrompt,
-      {
-        inlineData: {
-          data: base64Image,
-          mimeType: "image/jpeg"
-        }
-      }
-    ]);
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [
+        {
+          role: "user",
+          content: [
+            {
+              type: "text",
+              text: "Analyze this food image and provide detailed nutritional information. Identify all visible foods, estimate portion sizes, and calculate calories and macronutrients. Respond with JSON in this format: { \"foods\": [{ \"name\": string, \"quantity\": string, \"calories\": number, \"macros\": { \"protein\": number, \"carbs\": number, \"fat\": number, \"fiber\": number } }], \"totalCalories\": number, \"totalMacros\": { \"protein\": number, \"carbs\": number, \"fat\": number, \"fiber\": number }, \"confidence\": number }"
+            },
+            {
+              type: "image_url",
+              image_url: {
+                url: `data:image/jpeg;base64,${base64Image}`
+              }
+            }
+          ],
+        },
+      ],
+      response_format: { type: "json_object" },
+      max_tokens: 500,
+    });
 
-    const response = await result.response;
-    const text = response.text();
-
-    // Extract JSON from response
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
-      throw new Error('No valid JSON found in response');
-    }
-
-    const jsonResult = JSON.parse(jsonMatch[0]);
-    return jsonResult as CalorieAnalysis;
+    const result = JSON.parse(response.choices[0].message.content || "{}");
+    return result as CalorieAnalysis;
   } catch (error) {
-    throw new Error(`Failed to analyze food image: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    console.error("Error analyzing food photo:", error);
+    throw new Error(`Failed to analyze food photo: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }
 
@@ -274,6 +267,11 @@ function buildRecipeUserPrompt(params: RecipeGenerationParams): string {
 
   if (params.ingredients?.length) {
     prompt += `\n- Use these ingredients: ${params.ingredients.join(', ')}`;
+    if (params.allInMode) {
+      prompt += ` (ALL-IN MODE: Use ALL ingredients listed)`;
+    } else {
+      prompt += ` (GOURMET MODE: Use only the best combination of ingredients)`;
+    }
   }
 
   if (params.mealType) {
@@ -333,7 +331,6 @@ function buildRecipeUserPrompt(params: RecipeGenerationParams): string {
 }
 
 function validateAndFormatRecipe(result: any): GeneratedRecipe {
-  // Ensure all required fields are present with defaults
   return {
     title: result.title || "Untitled Recipe",
     description: result.description || "",

@@ -1,284 +1,175 @@
-import { useState } from "react";
-import Navigation from "@/components/navigation";
-import MultiStepForm from "@/components/multi-step-form";
+import { useState, useEffect } from "react";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
+import { isUnauthorizedError } from "@/lib/authUtils";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { useToast } from "@/hooks/use-toast";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { apiRequest, queryClient } from "@/lib/queryClient";
-import { useAuth } from "@/hooks/useAuth";
-import { Calendar, Clock, Users, Flame, ChefHat } from "lucide-react";
+import Navbar from "@/components/layout/navbar";
+import Footer from "@/components/layout/footer";
+import MealPlanCard from "@/components/meal-plan-card";
+import { Calendar, Target, Activity, Clock, Loader2 } from "lucide-react";
 
-const goals = ["Eat Healthy", "Lose Weight", "Gain Muscle"];
-const activityLevels = ["Sedentary", "Lightly Active", "Moderately Active", "Very Active"];
-const dietaryOptions = ["None", "Vegetarian", "Vegan", "Paleo", "Keto", "Gluten-Free", "Dairy-Free"];
-const planDurations = [3, 7, 14, 21, 30];
+const goals = [
+  { value: "eat_healthy", label: "Eat Healthy" },
+  { value: "lose_weight", label: "Lose Weight" },
+  { value: "gain_muscle", label: "Gain Muscle" },
+  { value: "maintain_weight", label: "Maintain Weight" }
+];
+
+const activityLevels = [
+  { value: "sedentary", label: "Sedentary" },
+  { value: "lightly_active", label: "Lightly Active" },
+  { value: "moderately_active", label: "Moderately Active" },
+  { value: "very_active", label: "Very Active" },
+  { value: "extremely_active", label: "Extremely Active" }
+];
+
+const dietaryRestrictions = [
+  "Vegetarian", "Vegan", "Pescatarian", "Keto", "Paleo", 
+  "Gluten-Free", "Dairy-Free", "Nut-Free", "Low-Carb", "Mediterranean"
+];
+
+const planDurations = [
+  { value: 3, label: "3 Days" },
+  { value: 7, label: "📆 7 Days" },
+  { value: 14, label: "14 Days" },
+  { value: 21, label: "21 Days" },
+  { value: 30, label: "30 Days" }
+];
 
 export default function MealPlanChef() {
   const { toast } = useToast();
-  const { user } = useAuth();
-  const [formData, setFormData] = useState({
-    gender: user?.gender || "male",
-    age: user?.age || 30,
-    height: user?.height || 175,
-    weight: user?.weight ? parseFloat(user.weight) : 70,
-    goal: "Eat Healthy",
-    activityLevel: "Moderately Active",
-    dietaryRestrictions: [] as string[],
-    days: 7,
-  });
-  const [generatedPlan, setGeneratedPlan] = useState<any>(null);
+  const { isAuthenticated, isLoading, user } = useAuth();
+  const queryClient = useQueryClient();
 
-  const generateMealPlan = useMutation({
-    mutationFn: async (params: any) => {
-      const response = await apiRequest('POST', '/api/meal-plans/generate', params);
-      return response.json();
-    },
-    onSuccess: (plan) => {
-      setGeneratedPlan(plan);
-      queryClient.invalidateQueries({ queryKey: ['/api/meal-plans'] });
+  const [gender, setGender] = useState("male");
+  const [height, setHeight] = useState(175);
+  const [weight, setWeight] = useState(70);
+  const [age, setAge] = useState(30);
+  const [goal, setGoal] = useState("lose_weight");
+  const [activityLevel, setActivityLevel] = useState("sedentary");
+  const [selectedRestrictions, setSelectedRestrictions] = useState<string[]>([]);
+  const [duration, setDuration] = useState(7);
+
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
       toast({
-        title: "Meal Plan Generated! 🎉",
-        description: "Your personalized meal plan is ready!",
+        title: "Unauthorized",
+        description: "You are logged out. Logging in again...",
+        variant: "destructive",
+      });
+      setTimeout(() => {
+        window.location.href = "/api/login";
+      }, 500);
+      return;
+    }
+  }, [isAuthenticated, isLoading, toast]);
+
+  // Pre-fill user data if available
+  useEffect(() => {
+    if (user) {
+      if (user.gender) setGender(user.gender);
+      if (user.height) setHeight(user.height);
+      if (user.weight) setWeight(Number(user.weight));
+      if (user.age) setAge(user.age);
+      if (user.goal) setGoal(user.goal);
+      if (user.activityLevel) setActivityLevel(user.activityLevel);
+      if (user.dietaryRestrictions) setSelectedRestrictions(user.dietaryRestrictions);
+    }
+  }, [user]);
+
+  // Get existing meal plans
+  const { data: mealPlans } = useQuery({
+    queryKey: ["/api/meal-plans"],
+    enabled: isAuthenticated,
+  });
+
+  // Generate meal plan mutation
+  const generateMealPlanMutation = useMutation({
+    mutationFn: async (params: any) => {
+      return await apiRequest("/api/ai/generate-meal-plan", {
+        method: "POST",
+        body: JSON.stringify(params),
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/meal-plans"] });
+      toast({
+        title: "Meal Plan Generated!",
+        description: "Your personalized meal plan has been created successfully.",
       });
     },
     onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "You are logged out. Logging in again...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
       toast({
-        title: "Generation Failed",
-        description: error.message,
+        title: "Error",
+        description: "Failed to generate meal plan. Please try again.",
         variant: "destructive",
       });
     },
   });
 
-  const updateFormData = (updates: Partial<typeof formData>) => {
-    setFormData(prev => ({ ...prev, ...updates }));
-  };
-
-  const toggleDietaryRestriction = (restriction: string) => {
-    if (restriction === "None") {
-      updateFormData({ dietaryRestrictions: [] });
-      return;
-    }
-    
-    const current = formData.dietaryRestrictions.filter(r => r !== "None");
-    const updated = current.includes(restriction)
-      ? current.filter(r => r !== restriction)
-      : [...current, restriction];
-    
-    updateFormData({ dietaryRestrictions: updated });
+  const toggleRestriction = (restriction: string) => {
+    setSelectedRestrictions(prev => 
+      prev.includes(restriction) 
+        ? prev.filter(item => item !== restriction)
+        : [...prev, restriction]
+    );
   };
 
   const handleGenerate = () => {
-    generateMealPlan.mutate({
-      days: formData.days,
-      goal: formData.goal,
-      dietaryRestrictions: formData.dietaryRestrictions,
-      activityLevel: formData.activityLevel,
+    const params = {
+      days: duration,
+      goal,
+      dietaryRestrictions: selectedRestrictions,
+      activityLevel,
       userStats: {
-        age: formData.age,
-        gender: formData.gender,
-        weight: formData.weight,
-        height: formData.height,
+        age,
+        gender,
+        weight,
+        height,
       },
-    });
+    };
+
+    generateMealPlanMutation.mutate(params);
   };
 
-  const steps = [
-    {
-      id: "personal-info",
-      title: "Personal Info",
-      description: "Tell us about yourself for personalized recommendations",
-      content: (
-        <div className="space-y-6">
-          <div>
-            <Label className="text-base font-medium">What is your Gender?</Label>
-            <div className="grid grid-cols-2 gap-3 mt-2">
-              <Button
-                variant={formData.gender === "male" ? "default" : "outline"}
-                onClick={() => updateFormData({ gender: "male" })}
-                className={formData.gender === "male" ? "bg-chef-orange" : ""}
-              >
-                Male
-              </Button>
-              <Button
-                variant={formData.gender === "female" ? "default" : "outline"}
-                onClick={() => updateFormData({ gender: "female" })}
-                className={formData.gender === "female" ? "bg-chef-orange" : ""}
-              >
-                Female
-              </Button>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="height">Height (cm)</Label>
-              <Input
-                id="height"
-                type="number"
-                value={formData.height}
-                onChange={(e) => updateFormData({ height: parseInt(e.target.value) || 0 })}
-                placeholder="175"
-              />
-            </div>
-            <div>
-              <Label htmlFor="weight">Weight (kg)</Label>
-              <Input
-                id="weight"
-                type="number"
-                value={formData.weight}
-                onChange={(e) => updateFormData({ weight: parseFloat(e.target.value) || 0 })}
-                placeholder="70"
-              />
-            </div>
-          </div>
-
-          <div>
-            <Label htmlFor="age">Age (years)</Label>
-            <Input
-              id="age"
-              type="number"
-              value={formData.age}
-              onChange={(e) => updateFormData({ age: parseInt(e.target.value) || 0 })}
-              placeholder="30"
-              className="w-full"
-            />
-          </div>
-        </div>
-      ),
-      isValid: formData.gender && formData.height > 0 && formData.weight > 0 && formData.age > 0,
-    },
-    {
-      id: "goal",
-      title: "Your Goal",
-      description: "What do you want to achieve with your meal plan?",
-      content: (
-        <div className="space-y-4">
-          {goals.map((goal) => (
-            <Button
-              key={goal}
-              variant={formData.goal === goal ? "default" : "outline"}
-              onClick={() => updateFormData({ goal })}
-              className={`w-full justify-start h-12 ${formData.goal === goal ? "bg-chef-orange" : ""}`}
-            >
-              {goal}
-            </Button>
-          ))}
-        </div>
-      ),
-      isValid: !!formData.goal,
-    },
-    {
-      id: "activity",
-      title: "Activity Level",
-      description: "How active are you on a typical day?",
-      content: (
-        <div className="space-y-4">
-          {activityLevels.map((level) => (
-            <Button
-              key={level}
-              variant={formData.activityLevel === level ? "default" : "outline"}
-              onClick={() => updateFormData({ activityLevel: level })}
-              className={`w-full justify-start h-12 ${formData.activityLevel === level ? "bg-chef-orange" : ""}`}
-            >
-              {level}
-            </Button>
-          ))}
-        </div>
-      ),
-      isValid: !!formData.activityLevel,
-    },
-    {
-      id: "dietary",
-      title: "Dietary Preferences",
-      description: "Select any dietary restrictions or preferences",
-      content: (
-        <div className="space-y-4">
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-            {dietaryOptions.map((option) => (
-              <Button
-                key={option}
-                variant={
-                  option === "None" 
-                    ? (formData.dietaryRestrictions.length === 0 ? "default" : "outline")
-                    : (formData.dietaryRestrictions.includes(option) ? "default" : "outline")
-                }
-                onClick={() => toggleDietaryRestriction(option)}
-                className={
-                  option === "None" 
-                    ? (formData.dietaryRestrictions.length === 0 ? "bg-chef-orange" : "")
-                    : (formData.dietaryRestrictions.includes(option) ? "bg-chef-orange" : "")
-                }
-              >
-                {option}
-              </Button>
-            ))}
-          </div>
-          
-          {formData.dietaryRestrictions.length > 0 && (
-            <div>
-              <Label className="text-sm font-medium">Selected:</Label>
-              <div className="flex flex-wrap gap-2 mt-2">
-                {formData.dietaryRestrictions.map((restriction) => (
-                  <Badge key={restriction} variant="default" className="bg-chef-orange">
-                    {restriction}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-      ),
-      isValid: true,
-    },
-    {
-      id: "duration",
-      title: "Plan Duration",
-      description: "How many days should your meal plan cover?",
-      content: (
-        <div className="space-y-4">
-          <div className="grid grid-cols-3 md:grid-cols-5 gap-3">
-            {planDurations.map((days) => (
-              <Button
-                key={days}
-                variant={formData.days === days ? "default" : "outline"}
-                onClick={() => updateFormData({ days })}
-                className={`${formData.days === days ? "bg-chef-orange" : ""}`}
-              >
-                📆 {days} Days
-              </Button>
-            ))}
-          </div>
-        </div>
-      ),
-      isValid: !!formData.days,
-    },
-  ];
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="chef-spinner w-32 h-32"></div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navigation />
+    <div className="min-h-screen bg-white">
+      <Navbar />
       
-      <main className="pt-20 pb-16">
+      <div className="pt-20 pb-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}
           <div className="text-center mb-12">
             <h1 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-6">
               📆 MealPlanChef
             </h1>
-            <h2 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-4">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">
               Your AI Powered Nutritionist
             </h2>
             <p className="text-xl text-gray-600 max-w-4xl mx-auto">
@@ -287,176 +178,336 @@ export default function MealPlanChef() {
           </div>
 
           <div className="grid lg:grid-cols-3 gap-8">
-            {/* Form */}
-            <div className="lg:col-span-2">
-              {!generatedPlan ? (
-                <MultiStepForm
-                  steps={steps}
-                  onComplete={handleGenerate}
-                  isSubmitting={generateMealPlan.isPending}
-                  submitButtonText="Generate your Meal Plan 📅"
-                />
-              ) : (
+            {/* Configuration Panel */}
+            <div className="lg:col-span-2 space-y-6">
+              {/* Step 1: Personal Information */}
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-chef-orange text-white rounded-full flex items-center justify-center font-bold">
+                      1
+                    </div>
+                    <CardTitle>Make your Meal Plan personal</CardTitle>
+                  </div>
+                  <p className="text-gray-600">
+                    MealPlanChef is not a cookie-cutter solution. Each Meal Plan is personalized on your Gender, Age and Body Measurements.
+                  </p>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <Label htmlFor="gender">What is your Gender?</Label>
+                    <div className="grid grid-cols-2 gap-2 mt-1">
+                      <Button
+                        variant={gender === "male" ? "default" : "outline"}
+                        onClick={() => setGender("male")}
+                        className={gender === "male" 
+                          ? "bg-chef-orange hover:bg-chef-orange/90" 
+                          : "hover:bg-chef-orange/10 hover:border-chef-orange"
+                        }
+                      >
+                        Male
+                      </Button>
+                      <Button
+                        variant={gender === "female" ? "default" : "outline"}
+                        onClick={() => setGender("female")}
+                        className={gender === "female" 
+                          ? "bg-chef-orange hover:bg-chef-orange/90" 
+                          : "hover:bg-chef-orange/10 hover:border-chef-orange"
+                        }
+                      >
+                        Female
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="height">Height (cm)</Label>
+                      <Input
+                        id="height"
+                        type="number"
+                        value={height}
+                        onChange={(e) => setHeight(parseInt(e.target.value) || 175)}
+                        placeholder="175"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="weight">Weight (kg)</Label>
+                      <Input
+                        id="weight"
+                        type="number"
+                        value={weight}
+                        onChange={(e) => setWeight(parseInt(e.target.value) || 70)}
+                        placeholder="70"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="age">Age (years)</Label>
+                    <Input
+                      id="age"
+                      type="number"
+                      value={age}
+                      onChange={(e) => setAge(parseInt(e.target.value) || 30)}
+                      placeholder="30"
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Step 2: Goal Selection */}
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-chef-orange text-white rounded-full flex items-center justify-center font-bold">
+                      2
+                    </div>
+                    <CardTitle>Select Your Goal</CardTitle>
+                  </div>
+                  <p className="text-gray-600">
+                    You can select Eat Healthy, Gain Muscles, or Lose Weight.
+                  </p>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {goals.map((goalOption) => (
+                      <Button
+                        key={goalOption.value}
+                        variant={goal === goalOption.value ? "default" : "outline"}
+                        onClick={() => setGoal(goalOption.value)}
+                        className={`w-full justify-start ${
+                          goal === goalOption.value 
+                            ? "bg-chef-orange hover:bg-chef-orange/90" 
+                            : "hover:bg-chef-orange/10 hover:border-chef-orange"
+                        }`}
+                      >
+                        {goalOption.label}
+                      </Button>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Step 3: Activity Level */}
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-chef-orange text-white rounded-full flex items-center justify-center font-bold">
+                      3
+                    </div>
+                    <CardTitle>Select your Daily Activity Level</CardTitle>
+                  </div>
+                  <p className="text-gray-600">
+                    Pick the option that is most suitable to your current lifestyle.
+                  </p>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {activityLevels.map((level) => (
+                      <Button
+                        key={level.value}
+                        variant={activityLevel === level.value ? "default" : "outline"}
+                        onClick={() => setActivityLevel(level.value)}
+                        className={`w-full justify-start ${
+                          activityLevel === level.value 
+                            ? "bg-chef-orange hover:bg-chef-orange/90" 
+                            : "hover:bg-chef-orange/10 hover:border-chef-orange"
+                        }`}
+                      >
+                        {level.label}
+                      </Button>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Step 4: Dietary Requirements */}
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-chef-orange text-white rounded-full flex items-center justify-center font-bold">
+                      4
+                    </div>
+                    <CardTitle>Select your dietary requirements</CardTitle>
+                  </div>
+                  <p className="text-gray-600">
+                    You can select among Vegetarian, Pescatarian, Vegan, Gluten-Free, Dairy-Free, Keto, and Paleo.
+                  </p>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                    {dietaryRestrictions.map((restriction) => (
+                      <Button
+                        key={restriction}
+                        variant={selectedRestrictions.includes(restriction) ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => toggleRestriction(restriction)}
+                        className={selectedRestrictions.includes(restriction)
+                          ? "bg-chef-orange hover:bg-chef-orange/90 text-xs" 
+                          : "hover:bg-chef-orange/10 hover:border-chef-orange text-xs"
+                        }
+                      >
+                        {restriction}
+                      </Button>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Step 5: Duration */}
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-chef-orange text-white rounded-full flex items-center justify-center font-bold">
+                      5
+                    </div>
+                    <CardTitle>Select the Meal Plan duration</CardTitle>
+                  </div>
+                  <p className="text-gray-600">
+                    Do you need a quick detox weekend or a full week plan?
+                  </p>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {planDurations.map((planDuration) => (
+                      <Button
+                        key={planDuration.value}
+                        variant={duration === planDuration.value ? "default" : "outline"}
+                        onClick={() => setDuration(planDuration.value)}
+                        className={`w-full justify-start ${
+                          duration === planDuration.value 
+                            ? "bg-chef-orange hover:bg-chef-orange/90" 
+                            : "hover:bg-chef-orange/10 hover:border-chef-orange"
+                        }`}
+                      >
+                        {planDuration.label}
+                      </Button>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Step 6: Generate */}
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-chef-orange text-white rounded-full flex items-center justify-center font-bold">
+                      6
+                    </div>
+                    <CardTitle>Generate your Meal Plan</CardTitle>
+                  </div>
+                  <p className="text-gray-600">
+                    Press the Generate button and wait for the magic to happen.
+                  </p>
+                </CardHeader>
+                <CardContent>
+                  <Button 
+                    onClick={handleGenerate}
+                    disabled={generateMealPlanMutation.isPending}
+                    className="w-full bg-chef-orange hover:bg-chef-orange/90 py-6 text-lg font-bold"
+                  >
+                    {generateMealPlanMutation.isPending ? (
+                      <>
+                        <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                        Generating Meal Plan...
+                      </>
+                    ) : (
+                      "Generate your Meal Plan 📅"
+                    )}
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Summary Panel */}
+            <div className="space-y-6">
+              <Card className="sticky top-24">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Target className="w-5 h-5 text-chef-orange" />
+                    Plan Summary
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Gender:</span>
+                      <span className="font-medium">{gender.charAt(0).toUpperCase() + gender.slice(1)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Age:</span>
+                      <span className="font-medium">{age} years</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Height:</span>
+                      <span className="font-medium">{height} cm</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Weight:</span>
+                      <span className="font-medium">{weight} kg</span>
+                    </div>
+                  </div>
+
+                  <Separator />
+
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Goal:</span>
+                      <span className="font-medium">{goals.find(g => g.value === goal)?.label}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Activity:</span>
+                      <span className="font-medium">{activityLevels.find(a => a.value === activityLevel)?.label}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Duration:</span>
+                      <span className="font-medium">{duration} days</span>
+                    </div>
+                  </div>
+
+                  {selectedRestrictions.length > 0 && (
+                    <>
+                      <Separator />
+                      <div>
+                        <h4 className="font-medium mb-2">Dietary Restrictions</h4>
+                        <div className="flex flex-wrap gap-1">
+                          {selectedRestrictions.map((restriction) => (
+                            <span key={restriction} className="text-xs bg-chef-orange/10 text-chef-orange px-2 py-1 rounded">
+                              {restriction}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Recent Meal Plans */}
+              {mealPlans && mealPlans.length > 0 && (
                 <Card>
                   <CardHeader>
-                    <CardTitle className="flex items-center space-x-2">
-                      <Calendar className="h-5 w-5 text-chef-orange" />
-                      <span>Your {formData.days}-Day Meal Plan</span>
+                    <CardTitle className="flex items-center gap-2">
+                      <Calendar className="w-5 h-5 text-chef-orange" />
+                      Recent Plans
                     </CardTitle>
-                    <CardDescription>
-                      Personalized for {formData.goal.toLowerCase()} with {formData.dietaryRestrictions.length > 0 ? formData.dietaryRestrictions.join(", ") : "no dietary restrictions"}
-                    </CardDescription>
                   </CardHeader>
-                  <CardContent className="space-y-6">
-                    {/* Daily Nutrition Summary */}
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-gray-50 rounded-lg">
-                      <div className="text-center">
-                        <div className="text-2xl font-bold text-gray-900">{generatedPlan.totalCalories}</div>
-                        <div className="text-sm text-gray-600">Daily Calories</div>
-                      </div>
-                      <div className="text-center">
-                        <div className="text-2xl font-bold text-gray-900">{generatedPlan.dailyMacros?.protein || 0}g</div>
-                        <div className="text-sm text-gray-600">Protein</div>
-                      </div>
-                      <div className="text-center">
-                        <div className="text-2xl font-bold text-gray-900">{generatedPlan.dailyMacros?.carbs || 0}g</div>
-                        <div className="text-sm text-gray-600">Carbs</div>
-                      </div>
-                      <div className="text-center">
-                        <div className="text-2xl font-bold text-gray-900">{generatedPlan.dailyMacros?.fat || 0}g</div>
-                        <div className="text-sm text-gray-600">Fat</div>
-                      </div>
-                    </div>
-
-                    {/* Meals by Day */}
-                    <div className="space-y-6">
-                      {Array.from({ length: formData.days }, (_, dayIndex) => {
-                        const dayMeals = generatedPlan.meals?.filter((meal: any) => meal.day === dayIndex + 1) || [];
-                        return (
-                          <div key={dayIndex}>
-                            <h3 className="text-lg font-semibold text-gray-900 mb-3">
-                              Day {dayIndex + 1}
-                            </h3>
-                            <div className="grid md:grid-cols-3 gap-4">
-                              {["breakfast", "lunch", "dinner"].map((mealType) => {
-                                const meal = dayMeals.find((m: any) => m.mealType.toLowerCase() === mealType);
-                                return (
-                                  <Card key={mealType} className="border-l-4 border-l-chef-orange">
-                                    <CardContent className="p-4">
-                                      <h4 className="font-medium text-gray-900 capitalize mb-2">{mealType}</h4>
-                                      {meal ? (
-                                        <div className="space-y-2">
-                                          <p className="text-sm font-medium">{meal.recipe.title}</p>
-                                          <div className="flex items-center space-x-3 text-xs text-gray-500">
-                                            <span className="flex items-center">
-                                              <Clock className="h-3 w-3 mr-1" />
-                                              {(meal.recipe.prepTime || 0) + (meal.recipe.cookTime || 0)} min
-                                            </span>
-                                            <span className="flex items-center">
-                                              <Flame className="h-3 w-3 mr-1" />
-                                              {meal.recipe.calories} cal
-                                            </span>
-                                          </div>
-                                        </div>
-                                      ) : (
-                                        <p className="text-sm text-gray-500">No meal planned</p>
-                                      )}
-                                    </CardContent>
-                                  </Card>
-                                );
-                              })}
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-
-                    <Separator />
-
-                    <div className="flex space-x-3">
-                      <Button 
-                        onClick={() => setGeneratedPlan(null)}
-                        variant="outline"
-                        className="flex-1"
-                      >
-                        Generate New Plan
-                      </Button>
-                      <Button 
-                        className="flex-1 bg-chef-orange hover:bg-chef-orange/90"
-                        onClick={() => {
-                          toast({
-                            title: "Plan Saved! 📅",
-                            description: "Your meal plan has been saved to your dashboard.",
-                          });
-                        }}
-                      >
-                        Save Plan
-                      </Button>
+                  <CardContent>
+                    <div className="space-y-3">
+                      {mealPlans.slice(0, 2).map((plan: any) => (
+                        <MealPlanCard key={plan.id} mealPlan={plan} showActions={false} />
+                      ))}
                     </div>
                   </CardContent>
                 </Card>
               )}
             </div>
-
-            {/* Summary */}
-            <div className="lg:col-span-1">
-              <Card className="sticky top-24">
-                <CardHeader>
-                  <CardTitle className="flex items-center space-x-2">
-                    <ChefHat className="h-5 w-5 text-chef-orange" />
-                    <span>Plan Summary</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <Label className="text-sm font-medium text-gray-600">Personal Info</Label>
-                    <p className="text-sm">{formData.gender}, {formData.age} years old</p>
-                    <p className="text-sm">{formData.height}cm, {formData.weight}kg</p>
-                  </div>
-
-                  <Separator />
-
-                  <div>
-                    <Label className="text-sm font-medium text-gray-600">Goal</Label>
-                    <p className="text-sm">{formData.goal}</p>
-                  </div>
-
-                  <div>
-                    <Label className="text-sm font-medium text-gray-600">Activity Level</Label>
-                    <p className="text-sm">{formData.activityLevel}</p>
-                  </div>
-
-                  <div>
-                    <Label className="text-sm font-medium text-gray-600">Duration</Label>
-                    <p className="text-sm">{formData.days} days</p>
-                  </div>
-
-                  {formData.dietaryRestrictions.length > 0 && (
-                    <div>
-                      <Label className="text-sm font-medium text-gray-600">Dietary Restrictions</Label>
-                      <div className="flex flex-wrap gap-1 mt-1">
-                        {formData.dietaryRestrictions.map((restriction) => (
-                          <Badge key={restriction} variant="secondary" className="text-xs">
-                            {restriction}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {!generatedPlan && (
-                    <div className="text-center pt-4">
-                      <p className="text-sm text-gray-500">
-                        Complete the form to generate your personalized meal plan
-                      </p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
           </div>
         </div>
-      </main>
+      </div>
+
+      <Footer />
     </div>
   );
 }

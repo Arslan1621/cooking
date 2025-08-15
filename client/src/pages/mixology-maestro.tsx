@@ -1,231 +1,301 @@
-import { useState } from "react";
-import Navigation from "@/components/navigation";
-import RecipeCard from "@/components/recipe-card";
+import { useState, useEffect } from "react";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
+import { isUnauthorizedError } from "@/lib/authUtils";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { useToast } from "@/hooks/use-toast";
-import { useMutation } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
-import { Loader2, Wine, Plus, X, Sparkles } from "lucide-react";
+import Navbar from "@/components/layout/navbar";
+import Footer from "@/components/layout/footer";
+import RecipeCard from "@/components/recipe-card";
+import { Wine, Martini, Coffee, Clock, Loader2, Plus, X } from "lucide-react";
 
-const drinkTypes = ["Cocktail", "Mocktail", "Smoothie", "Coffee Drink", "Tea Blend", "Punch"];
-const alcoholTypes = ["Vodka", "Gin", "Rum", "Whiskey", "Tequila", "Brandy", "Liqueur", "Wine", "Beer"];
-const flavorProfiles = ["Sweet", "Sour", "Bitter", "Spicy", "Fruity", "Herbal", "Smoky", "Tropical"];
-const occasions = ["Party", "Date Night", "Brunch", "Summer", "Winter", "Holiday", "Casual"];
+const spiritTypes = [
+  "Vodka", "Gin", "Rum", "Whiskey", "Bourbon", "Scotch", "Tequila", 
+  "Mezcal", "Brandy", "Cognac", "Liqueurs", "Aperitifs", "Bitters"
+];
 
-const popularIngredients = [
-  "Lime juice", "Lemon juice", "Simple syrup", "Angostura bitters", "Mint",
-  "Orange juice", "Cranberry juice", "Pineapple juice", "Grenadine", "Club soda",
-  "Ginger beer", "Coconut milk", "Honey", "Sugar", "Salt", "Ice"
+const mixerTypes = [
+  "Fresh Citrus", "Simple Syrup", "Soda Water", "Tonic Water", "Ginger Beer",
+  "Fruit Juices", "Vermouth", "Triple Sec", "Grenadine", "Bitters", "Herbs", "Spices"
+];
+
+const cocktailStyles = [
+  "Classic", "Modern", "Tropical", "Sour", "Sweet", "Bitter", "Smoky", 
+  "Refreshing", "Strong", "Low ABV", "Mocktail"
+];
+
+const occasions = [
+  "Happy Hour", "Date Night", "Party", "Brunch", "After Dinner", 
+  "Summer Cocktail", "Winter Warmer", "Celebration", "Casual"
 ];
 
 export default function MixologyMaestro() {
   const { toast } = useToast();
-  const [drinkName, setDrinkName] = useState("");
-  const [drinkType, setDrinkType] = useState("");
-  const [selectedIngredients, setSelectedIngredients] = useState<string[]>([]);
-  const [customIngredient, setCustomIngredient] = useState("");
-  const [alcoholType, setAlcoholType] = useState("");
-  const [flavorProfile, setFlavorProfile] = useState("");
-  const [occasion, setOccasion] = useState("");
-  const [servings, setServings] = useState<number>(1);
-  const [generatedRecipe, setGeneratedRecipe] = useState<any>(null);
+  const { isAuthenticated, isLoading } = useAuth();
+  const queryClient = useQueryClient();
 
-  const generateRecipe = useMutation({
-    mutationFn: async (params: any) => {
-      const response = await apiRequest('POST', '/api/recipes/generate', params);
-      return response.json();
-    },
-    onSuccess: (recipe) => {
-      setGeneratedRecipe(recipe);
+  const [cocktailName, setCocktailName] = useState("");
+  const [description, setDescription] = useState("");
+  const [selectedSpirits, setSelectedSpirits] = useState<string[]>([]);
+  const [selectedMixers, setSelectedMixers] = useState<string[]>([]);
+  const [customIngredients, setCustomIngredients] = useState<string[]>([]);
+  const [newIngredient, setNewIngredient] = useState("");
+  const [cocktailStyle, setCocktailStyle] = useState("");
+  const [occasion, setOccasion] = useState("");
+  const [strength, setStrength] = useState("medium");
+  const [servings, setServings] = useState(1);
+
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
       toast({
-        title: "Cocktail Recipe Generated! 🍹",
-        description: "Your signature drink is ready to mix!",
+        title: "Unauthorized",
+        description: "You are logged out. Logging in again...",
+        variant: "destructive",
+      });
+      setTimeout(() => {
+        window.location.href = "/api/login";
+      }, 500);
+      return;
+    }
+  }, [isAuthenticated, isLoading, toast]);
+
+  // Get user's cocktail recipes
+  const { data: recipes } = useQuery({
+    queryKey: ["/api/recipes"],
+    enabled: isAuthenticated,
+  });
+
+  // Generate cocktail recipe mutation
+  const generateCocktailMutation = useMutation({
+    mutationFn: async (params: any) => {
+      return await apiRequest("/api/ai/generate-recipe", {
+        method: "POST",
+        body: JSON.stringify(params),
       });
     },
-    onError: (error) => {
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/recipes"] });
       toast({
-        title: "Generation Failed",
-        description: error.message,
+        title: "Cocktail Created!",
+        description: "Your signature cocktail recipe has been crafted and saved.",
+      });
+      // Reset form
+      setCocktailName("");
+      setDescription("");
+      setSelectedSpirits([]);
+      setSelectedMixers([]);
+      setCustomIngredients([]);
+      setCocktailStyle("");
+      setOccasion("");
+    },
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "You are logged out. Logging in again...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({
+        title: "Error",
+        description: "Failed to generate cocktail recipe. Please try again.",
         variant: "destructive",
       });
     },
   });
 
-  const addIngredient = (ingredient: string) => {
-    if (ingredient && !selectedIngredients.includes(ingredient)) {
-      setSelectedIngredients([...selectedIngredients, ingredient]);
+  const toggleSelection = (item: string, list: string[], setList: (items: string[]) => void) => {
+    if (list.includes(item)) {
+      setList(list.filter(i => i !== item));
+    } else {
+      setList([...list, item]);
     }
-    setCustomIngredient("");
   };
 
-  const removeIngredient = (ingredient: string) => {
-    setSelectedIngredients(selectedIngredients.filter(i => i !== ingredient));
+  const addCustomIngredient = () => {
+    if (newIngredient.trim() && !customIngredients.includes(newIngredient.trim())) {
+      setCustomIngredients([...customIngredients, newIngredient.trim()]);
+      setNewIngredient("");
+    }
+  };
+
+  const removeCustomIngredient = (ingredient: string) => {
+    setCustomIngredients(customIngredients.filter(i => i !== ingredient));
   };
 
   const handleGenerate = () => {
-    if (!drinkType) {
+    const allIngredients = [...selectedSpirits, ...selectedMixers, ...customIngredients];
+    
+    if (allIngredients.length === 0 && !cocktailName.trim()) {
       toast({
-        title: "Missing Drink Type",
-        description: "Please select what type of drink you want to create.",
+        title: "Missing Information",
+        description: "Please provide either a cocktail name or select some ingredients.",
         variant: "destructive",
       });
       return;
     }
 
-    generateRecipe.mutate({
-      chefMode: 'mixology',
-      searchQuery: drinkName || `${drinkType} with ${selectedIngredients.join(', ')}`,
-      mealType: drinkType,
-      ingredients: selectedIngredients,
-      servings: servings,
-      tags: [alcoholType, flavorProfile, occasion].filter(Boolean),
-      description: `A ${flavorProfile?.toLowerCase()} ${drinkType?.toLowerCase()} perfect for ${occasion?.toLowerCase()}`,
-    });
+    const params = {
+      ...(cocktailName && { title: cocktailName.trim() }),
+      ...(description && { description: description.trim() }),
+      ingredients: allIngredients,
+      ...(cocktailStyle && { tags: [cocktailStyle] }),
+      ...(occasion && { mealType: occasion.toLowerCase().replace(' ', '-') }),
+      difficulty: strength === "low" ? "easy" : strength === "medium" ? "medium" : "hard",
+      servings,
+      cookingTime: 5, // Cocktails are quick to make
+      chefMode: "mixology",
+    };
+
+    generateCocktailMutation.mutate(params);
   };
 
-  const classicCocktails = [
-    { name: "Old Fashioned", type: "Cocktail", alcohol: "Whiskey" },
-    { name: "Mojito", type: "Cocktail", alcohol: "Rum" },
-    { name: "Margarita", type: "Cocktail", alcohol: "Tequila" },
-    { name: "Martini", type: "Cocktail", alcohol: "Gin" },
-    { name: "Moscow Mule", type: "Cocktail", alcohol: "Vodka" },
-    { name: "Piña Colada", type: "Cocktail", alcohol: "Rum" },
-    { name: "Virgin Mary", type: "Mocktail", alcohol: "" },
-    { name: "Shirley Temple", type: "Mocktail", alcohol: "" },
-  ];
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="chef-spinner w-32 h-32"></div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navigation />
+    <div className="min-h-screen bg-white">
+      <Navbar />
       
-      <main className="pt-20 pb-16">
+      <div className="pt-20 pb-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}
           <div className="text-center mb-12">
             <h1 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-6">
-              🍹 MixologyMaestro
+              🍸 MixologyMaestro
             </h1>
-            <h2 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-4">
-              Craft Amazing Cocktails & Beverages
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">
+              Craft Perfect Cocktails
             </h2>
             <p className="text-xl text-gray-600 max-w-4xl mx-auto">
-              From classic cocktails to innovative mocktails, coffee creations, and smoothie blends. MixologyMaestro helps you create the perfect drink for any occasion.
+              From classic cocktails to innovative creations, MixologyMaestro helps you craft the perfect drink for any occasion. Master the art of mixology with AI-guided recipes and professional techniques.
             </p>
           </div>
 
           <div className="grid lg:grid-cols-3 gap-8">
-            {/* Drink Creation Form */}
+            {/* Cocktail Creation Form */}
             <div className="lg:col-span-2 space-y-6">
-              {/* Drink Type & Name */}
+              {/* Basic Cocktail Information */}
               <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center space-x-2">
-                    <Wine className="h-5 w-5 text-chef-orange" />
-                    <span>What would you like to create?</span>
+                  <CardTitle className="flex items-center gap-2">
+                    <Martini className="w-5 h-5 text-chef-orange" />
+                    Cocktail Details
                   </CardTitle>
+                  <p className="text-gray-600">
+                    Describe your ideal cocktail or let our AI create something unique.
+                  </p>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
-                    <Label>Drink Type</Label>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mt-2">
-                      {drinkTypes.map((type) => (
-                        <Button
-                          key={type}
-                          variant={drinkType === type ? "default" : "outline"}
-                          onClick={() => setDrinkType(type)}
-                          className={`${drinkType === type ? "bg-chef-orange" : ""}`}
-                          size="sm"
-                        >
-                          {type}
-                        </Button>
-                      ))}
-                    </div>
+                    <Label htmlFor="cocktailName">Cocktail Name (Optional)</Label>
+                    <Input
+                      id="cocktailName"
+                      value={cocktailName}
+                      onChange={(e) => setCocktailName(e.target.value)}
+                      placeholder="e.g., Sunset Spritz, Smoky Old Fashioned, Garden Gimlet"
+                    />
                   </div>
 
                   <div>
-                    <Label htmlFor="drinkName">Drink Name (Optional)</Label>
-                    <Input
-                      id="drinkName"
-                      value={drinkName}
-                      onChange={(e) => setDrinkName(e.target.value)}
-                      placeholder="e.g., Tropical Sunset, Spicy Margarita, Morning Boost..."
+                    <Label htmlFor="description">Description (Optional)</Label>
+                    <Textarea
+                      id="description"
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)}
+                      placeholder="Describe the flavor profile, mood, or inspiration..."
+                      rows={3}
                     />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="cocktailStyle">Style</Label>
+                      <Select value={cocktailStyle} onValueChange={setCocktailStyle}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select style" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {cocktailStyles.map((style) => (
+                            <SelectItem key={style} value={style.toLowerCase()}>
+                              {style}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div>
+                      <Label htmlFor="occasion">Occasion</Label>
+                      <Select value={occasion} onValueChange={setOccasion}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select occasion" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {occasions.map((occ) => (
+                            <SelectItem key={occ} value={occ.toLowerCase()}>
+                              {occ}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
 
-              {/* Ingredients */}
+              {/* Spirits Selection */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Select Your Ingredients</CardTitle>
-                  <CardDescription>
-                    Choose ingredients you have or want to use in your drink
-                  </CardDescription>
+                  <CardTitle className="flex items-center gap-2">
+                    <Wine className="w-5 h-5 text-chef-orange" />
+                    Select Base Spirits
+                  </CardTitle>
+                  <p className="text-gray-600">
+                    Choose your preferred spirits or let MixologyMaestro suggest the perfect combination.
+                  </p>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  {/* Custom ingredient input */}
-                  <div className="flex gap-2">
-                    <Input
-                      placeholder="Add custom ingredient..."
-                      value={customIngredient}
-                      onChange={(e) => setCustomIngredient(e.target.value)}
-                      onKeyPress={(e) => e.key === 'Enter' && addIngredient(customIngredient)}
-                    />
-                    <Button 
-                      onClick={() => addIngredient(customIngredient)}
-                      disabled={!customIngredient}
-                    >
-                      <Plus className="h-4 w-4" />
-                    </Button>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                    {spiritTypes.map((spirit) => (
+                      <Button
+                        key={spirit}
+                        variant={selectedSpirits.includes(spirit) ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => toggleSelection(spirit, selectedSpirits, setSelectedSpirits)}
+                        className={selectedSpirits.includes(spirit)
+                          ? "bg-chef-orange hover:bg-chef-orange/90 text-xs" 
+                          : "hover:bg-chef-orange/10 hover:border-chef-orange text-xs"
+                        }
+                      >
+                        {spirit}
+                      </Button>
+                    ))}
                   </div>
-
-                  {/* Popular ingredients */}
-                  <div>
-                    <Label className="text-sm font-medium">Common Ingredients</Label>
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      {popularIngredients.map((ingredient) => (
-                        <Button
-                          key={ingredient}
-                          variant={selectedIngredients.includes(ingredient) ? "default" : "outline"}
-                          size="sm"
-                          onClick={() => 
-                            selectedIngredients.includes(ingredient) 
-                              ? removeIngredient(ingredient)
-                              : addIngredient(ingredient)
-                          }
-                          className={selectedIngredients.includes(ingredient) ? "bg-chef-orange" : ""}
-                        >
-                          {ingredient}
-                        </Button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Selected ingredients */}
-                  {selectedIngredients.length > 0 && (
-                    <div>
-                      <Label className="text-sm font-medium">Selected Ingredients</Label>
-                      <div className="flex flex-wrap gap-2 mt-2">
-                        {selectedIngredients.map((ingredient) => (
-                          <Badge key={ingredient} variant="default" className="bg-chef-orange">
-                            {ingredient}
-                            <button
-                              onClick={() => removeIngredient(ingredient)}
-                              className="ml-2 hover:text-gray-200"
-                            >
-                              <X className="h-3 w-3" />
-                            </button>
+                  {selectedSpirits.length > 0 && (
+                    <div className="mt-4">
+                      <h4 className="font-medium mb-2">Selected Spirits ({selectedSpirits.length})</h4>
+                      <div className="flex flex-wrap gap-1">
+                        {selectedSpirits.map((spirit) => (
+                          <Badge key={spirit} variant="secondary" className="bg-chef-orange/10 text-chef-orange">
+                            {spirit}
                           </Badge>
                         ))}
                       </div>
@@ -234,147 +304,299 @@ export default function MixologyMaestro() {
                 </CardContent>
               </Card>
 
-              {/* Preferences */}
+              {/* Mixers & Modifiers */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Drink Preferences</CardTitle>
+                  <CardTitle>Mixers & Modifiers</CardTitle>
+                  <p className="text-gray-600">
+                    Add mixers, syrups, bitters, and other flavor enhancers.
+                  </p>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                    {mixerTypes.map((mixer) => (
+                      <Button
+                        key={mixer}
+                        variant={selectedMixers.includes(mixer) ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => toggleSelection(mixer, selectedMixers, setSelectedMixers)}
+                        className={selectedMixers.includes(mixer)
+                          ? "bg-chef-orange hover:bg-chef-orange/90 text-xs" 
+                          : "hover:bg-chef-orange/10 hover:border-chef-orange text-xs"
+                        }
+                      >
+                        {mixer}
+                      </Button>
+                    ))}
+                  </div>
+                  {selectedMixers.length > 0 && (
+                    <div className="mt-4">
+                      <h4 className="font-medium mb-2">Selected Mixers ({selectedMixers.length})</h4>
+                      <div className="flex flex-wrap gap-1">
+                        {selectedMixers.map((mixer) => (
+                          <Badge key={mixer} variant="secondary" className="bg-chef-orange/10 text-chef-orange">
+                            {mixer}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Custom Ingredients */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Custom Ingredients</CardTitle>
+                  <p className="text-gray-600">
+                    Add specific ingredients, garnishes, or unique elements.
+                  </p>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex gap-2 mb-4">
+                    <Input
+                      value={newIngredient}
+                      onChange={(e) => setNewIngredient(e.target.value)}
+                      placeholder="Add custom ingredient..."
+                      onKeyPress={(e) => e.key === 'Enter' && addCustomIngredient()}
+                    />
+                    <Button 
+                      onClick={addCustomIngredient}
+                      disabled={!newIngredient.trim()}
+                      size="sm"
+                      className="bg-chef-orange hover:bg-chef-orange/90"
+                    >
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  {customIngredients.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {customIngredients.map((ingredient) => (
+                        <Badge 
+                          key={ingredient} 
+                          variant="secondary" 
+                          className="bg-chef-orange/10 text-chef-orange"
+                        >
+                          {ingredient}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-auto p-0 ml-2 hover:bg-transparent"
+                            onClick={() => removeCustomIngredient(ingredient)}
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Cocktail Parameters */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Cocktail Settings</CardTitle>
+                  <p className="text-gray-600">
+                    Customize the strength and serving size of your cocktail.
+                  </p>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="grid md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <Label>Alcohol Base (if applicable)</Label>
-                      <Select value={alcoholType} onValueChange={setAlcoholType}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select alcohol type" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="">None (Mocktail)</SelectItem>
-                          {alcoholTypes.map((alcohol) => (
-                            <SelectItem key={alcohol} value={alcohol}>{alcohol}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div>
-                      <Label>Flavor Profile</Label>
-                      <Select value={flavorProfile} onValueChange={setFlavorProfile}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select flavor" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {flavorProfiles.map((flavor) => (
-                            <SelectItem key={flavor} value={flavor}>{flavor}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div>
-                      <Label>Occasion</Label>
-                      <Select value={occasion} onValueChange={setOccasion}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select occasion" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {occasions.map((occ) => (
-                            <SelectItem key={occ} value={occ}>{occ}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div>
-                      <Label>Servings</Label>
-                      <Select value={servings.toString()} onValueChange={(v) => setServings(parseInt(v))}>
+                      <Label htmlFor="strength">Strength</Label>
+                      <Select value={strength} onValueChange={setStrength}>
                         <SelectTrigger>
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          {[1, 2, 4, 6, 8].map((s) => (
-                            <SelectItem key={s} value={s.toString()}>{s} serving{s > 1 ? 's' : ''}</SelectItem>
+                          <SelectItem value="low">Low ABV</SelectItem>
+                          <SelectItem value="medium">Medium</SelectItem>
+                          <SelectItem value="high">Strong</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div>
+                      <Label htmlFor="servings">Servings</Label>
+                      <Select value={servings.toString()} onValueChange={(value) => setServings(parseInt(value))}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {[1, 2, 4, 6, 8, 10].map((size) => (
+                            <SelectItem key={size} value={size.toString()}>
+                              {size} {size === 1 ? 'cocktail' : 'cocktails'}
+                            </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
                     </div>
                   </div>
+                </CardContent>
+              </Card>
 
+              {/* Generate Button */}
+              <Card>
+                <CardContent className="pt-6">
                   <Button 
                     onClick={handleGenerate}
-                    disabled={generateRecipe.isPending || !drinkType}
-                    className="w-full bg-chef-orange hover:bg-chef-orange/90"
-                    size="lg"
+                    disabled={generateCocktailMutation.isPending}
+                    className="w-full bg-chef-orange hover:bg-chef-orange/90 py-6 text-lg font-bold"
                   >
-                    {generateRecipe.isPending ? (
+                    {generateCocktailMutation.isPending ? (
                       <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Mixing Your Drink...
+                        <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                        Crafting Your Cocktail...
                       </>
                     ) : (
-                      <>
-                        <Sparkles className="mr-2 h-4 w-4" />
-                        Create My Drink 🍹
-                      </>
+                      "Craft Perfect Cocktail 🍸"
                     )}
                   </Button>
                 </CardContent>
               </Card>
+            </div>
 
-              {/* Classic Cocktails */}
+            {/* Sidebar */}
+            <div className="space-y-6">
+              {/* Summary Panel */}
+              <Card className="sticky top-24">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Martini className="w-5 h-5 text-chef-orange" />
+                    Cocktail Preview
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Name:</span>
+                      <span className="font-medium">
+                        {cocktailName || "AI Generated"}
+                      </span>
+                    </div>
+                    {cocktailStyle && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Style:</span>
+                        <span className="font-medium">{cocktailStyle.charAt(0).toUpperCase() + cocktailStyle.slice(1)}</span>
+                      </div>
+                    )}
+                    {occasion && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Occasion:</span>
+                        <span className="font-medium">{occasion}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Strength:</span>
+                      <span className="font-medium">{strength.charAt(0).toUpperCase() + strength.slice(1)} ABV</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Servings:</span>
+                      <span className="font-medium">{servings}</span>
+                    </div>
+                  </div>
+
+                  {(selectedSpirits.length > 0 || selectedMixers.length > 0 || customIngredients.length > 0) && (
+                    <>
+                      <Separator />
+                      <div>
+                        <h4 className="font-medium mb-2">Ingredients ({selectedSpirits.length + selectedMixers.length + customIngredients.length})</h4>
+                        <div className="space-y-2">
+                          {selectedSpirits.length > 0 && (
+                            <div>
+                              <p className="text-xs text-gray-500 mb-1">Spirits:</p>
+                              <div className="flex flex-wrap gap-1">
+                                {selectedSpirits.slice(0, 3).map((spirit) => (
+                                  <span key={spirit} className="text-xs bg-red-50 text-red-700 px-2 py-1 rounded">
+                                    {spirit}
+                                  </span>
+                                ))}
+                                {selectedSpirits.length > 3 && (
+                                  <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">
+                                    +{selectedSpirits.length - 3}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          )}
+                          {selectedMixers.length > 0 && (
+                            <div>
+                              <p className="text-xs text-gray-500 mb-1">Mixers:</p>
+                              <div className="flex flex-wrap gap-1">
+                                {selectedMixers.slice(0, 3).map((mixer) => (
+                                  <span key={mixer} className="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
+                                    {mixer}
+                                  </span>
+                                ))}
+                                {selectedMixers.length > 3 && (
+                                  <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">
+                                    +{selectedMixers.length - 3}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          )}
+                          {customIngredients.length > 0 && (
+                            <div>
+                              <p className="text-xs text-gray-500 mb-1">Custom:</p>
+                              <div className="flex flex-wrap gap-1">
+                                {customIngredients.map((ingredient) => (
+                                  <span key={ingredient} className="text-xs bg-chef-orange/10 text-chef-orange px-2 py-1 rounded">
+                                    {ingredient}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Mixology Tips */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Try a Classic</CardTitle>
-                  <CardDescription>
-                    Get inspired by these timeless cocktail recipes
-                  </CardDescription>
+                  <CardTitle className="text-base">🍹 Mixology Tips</CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="grid md:grid-cols-2 gap-3">
-                    {classicCocktails.map((cocktail, index) => (
-                      <Button
-                        key={index}
-                        variant="outline"
-                        className="h-auto p-4 justify-start"
-                        onClick={() => {
-                          setDrinkName(cocktail.name);
-                          setDrinkType(cocktail.type);
-                          setAlcoholType(cocktail.alcohol);
-                        }}
-                      >
-                        <div className="text-left">
-                          <div className="font-medium">{cocktail.name}</div>
-                          <div className="text-sm text-gray-500">
-                            {cocktail.type} {cocktail.alcohol && `• ${cocktail.alcohol}`}
-                          </div>
-                        </div>
-                      </Button>
-                    ))}
+                <CardContent className="space-y-3 text-sm">
+                  <div className="p-3 bg-blue-50 rounded-lg">
+                    <p className="font-medium text-blue-900 mb-1">Balance is Key</p>
+                    <p className="text-blue-700">Perfect cocktails balance sweet, sour, strong, and weak elements.</p>
+                  </div>
+                  <div className="p-3 bg-green-50 rounded-lg">
+                    <p className="font-medium text-green-900 mb-1">Fresh Ingredients</p>
+                    <p className="text-green-700">Use fresh juices and quality spirits for the best results.</p>
+                  </div>
+                  <div className="p-3 bg-purple-50 rounded-lg">
+                    <p className="font-medium text-purple-900 mb-1">Proper Technique</p>
+                    <p className="text-purple-700">Shaking vs stirring, proper dilution, and garnish presentation matter.</p>
                   </div>
                 </CardContent>
               </Card>
             </div>
-
-            {/* Generated Recipe */}
-            <div className="lg:col-span-1">
-              {generatedRecipe ? (
-                <RecipeCard recipe={generatedRecipe} />
-              ) : (
-                <Card className="sticky top-24">
-                  <CardContent className="p-8 text-center">
-                    <Wine className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-600 mb-2">Drink recipe will appear here</p>
-                    <p className="text-sm text-gray-500">
-                      Select your drink type and preferences to create a custom beverage recipe!
-                    </p>
-                  </CardContent>
-                </Card>
-              )}
-            </div>
           </div>
+
+          {/* Recent Cocktail Recipes */}
+          {recipes && recipes.length > 0 && (
+            <div className="mt-16">
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">Your Cocktail Collection</h2>
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {recipes
+                  .filter((recipe: any) => recipe.chefMode === 'mixology')
+                  .slice(0, 6)
+                  .map((recipe: any) => (
+                    <RecipeCard key={recipe.id} recipe={recipe} />
+                  ))}
+              </div>
+            </div>
+          )}
         </div>
-      </main>
+      </div>
+
+      <Footer />
     </div>
   );
 }

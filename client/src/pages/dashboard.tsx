@@ -1,38 +1,28 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
+import { Link } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { isUnauthorizedError } from "@/lib/authUtils";
-import Navigation from "@/components/navigation";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useQuery } from "@tanstack/react-query";
+import Navbar from "@/components/layout/navbar";
+import Footer from "@/components/layout/footer";
 import { 
-  Utensils, 
-  Camera, 
+  ChefHat, 
   Calendar, 
+  Camera, 
   Package, 
-  BookOpen,
+  Book, 
   Target,
   TrendingUp,
-  Clock
+  Clock,
+  Award
 } from "lucide-react";
-import { Link } from "wouter";
-
-interface DashboardStats {
-  totalRecipes: number;
-  favoritesCount: number;
-  pantryItemsCount: number;
-  weeklyMealPlan: boolean;
-  todayCalories: number;
-  weeklyProgress: number;
-}
 
 export default function Dashboard() {
-  const { user, isAuthenticated, isLoading } = useAuth();
   const { toast } = useToast();
+  const { isAuthenticated, isLoading, user } = useAuth();
 
-  // Redirect to home if not authenticated
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       toast({
@@ -47,236 +37,275 @@ export default function Dashboard() {
     }
   }, [isAuthenticated, isLoading, toast]);
 
-  const { data: recipes = [] } = useQuery({
-    queryKey: ["/api/recipes"],
-    enabled: isAuthenticated,
-    retry: false,
-  });
-
-  const { data: pantryItems = [] } = useQuery({
-    queryKey: ["/api/pantry"],
-    enabled: isAuthenticated,
-    retry: false,
-  });
-
-  const { data: mealPlans = [] } = useQuery({
-    queryKey: ["/api/meal-plans"],
-    enabled: isAuthenticated,
-    retry: false,
-  });
-
-  const { data: todayEntries = [] } = useQuery({
-    queryKey: ["/api/calories", new Date().toISOString().split('T')[0]],
-    enabled: isAuthenticated,
-    retry: false,
-  });
-
-  if (isLoading || !isAuthenticated) {
-    return <div className="min-h-screen bg-white">Loading...</div>;
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-chef-orange"></div>
+      </div>
+    );
   }
-
-  const todayCalories = todayEntries.reduce((total: number, entry: any) => total + (entry.calories || 0), 0);
-  const favoritesCount = recipes.filter((recipe: any) => recipe.isFavorite).length;
-  
-  const quickActions = [
-    {
-      title: "PantryChef",
-      description: "Generate recipes from your pantry",
-      icon: <Package className="h-6 w-6" />,
-      color: "bg-blue-500",
-      href: "/pantry-chef"
-    },
-    {
-      title: "MealPlanChef", 
-      description: "Create personalized meal plans",
-      icon: <Calendar className="h-6 w-6" />,
-      color: "bg-green-500",
-      href: "/meal-plan-chef"
-    },
-    {
-      title: "Calorie Tracker",
-      description: "Track your daily nutrition",
-      icon: <Camera className="h-6 w-6" />,
-      color: "bg-purple-500",
-      href: "/calorie-tracker"
-    },
-    {
-      title: "MasterChef",
-      description: "Search & generate any recipe",
-      icon: <Utensils className="h-6 w-6" />,
-      color: "bg-chef-orange",
-      href: "/master-chef"
-    }
-  ];
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Navigation />
+      <Navbar />
       
-      <div className="pt-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="pt-20 pb-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Welcome Header */}
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              Welcome back, {user?.firstName || user?.email?.split('@')[0] || 'Chef'}! 👋
+              Welcome back, {user?.firstName || 'Chef'}! 👋
             </h1>
-            <p className="text-gray-600">Ready to cook something amazing today?</p>
+            <p className="text-gray-600">
+              Ready to cook something amazing today? Let's get started with AI-powered cooking.
+            </p>
           </div>
 
-          {/* Stats Overview */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          {/* Quick Stats */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
             <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">Total Recipes</p>
-                    <p className="text-2xl font-bold text-gray-900">{recipes.length}</p>
-                  </div>
-                  <BookOpen className="h-8 w-8 text-chef-orange" />
-                </div>
-              </CardContent>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-2xl font-bold text-chef-orange">12</CardTitle>
+                <CardDescription className="text-sm">Recipes Created</CardDescription>
+              </CardHeader>
             </Card>
-
             <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">Favorites</p>
-                    <p className="text-2xl font-bold text-gray-900">{favoritesCount}</p>
-                  </div>
-                  <Target className="h-8 w-8 text-red-500" />
-                </div>
-              </CardContent>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-2xl font-bold text-chef-orange">3</CardTitle>
+                <CardDescription className="text-sm">Meal Plans</CardDescription>
+              </CardHeader>
             </Card>
-
             <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">Pantry Items</p>
-                    <p className="text-2xl font-bold text-gray-900">{pantryItems.length}</p>
-                  </div>
-                  <Package className="h-8 w-8 text-blue-500" />
-                </div>
-              </CardContent>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-2xl font-bold text-chef-orange">24</CardTitle>
+                <CardDescription className="text-sm">Pantry Items</CardDescription>
+              </CardHeader>
             </Card>
-
             <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">Today's Calories</p>
-                    <p className="text-2xl font-bold text-gray-900">{todayCalories}</p>
-                  </div>
-                  <TrendingUp className="h-8 w-8 text-green-500" />
-                </div>
-              </CardContent>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-2xl font-bold text-chef-orange">1,247</CardTitle>
+                <CardDescription className="text-sm">Calories Today</CardDescription>
+              </CardHeader>
             </Card>
           </div>
 
-          {/* Quick Actions */}
-          <div className="mb-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Quick Actions</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {quickActions.map((action, index) => (
-                <Link key={index} href={action.href}>
-                  <Card className="cursor-pointer hover:shadow-lg transition-shadow">
-                    <CardContent className="p-6">
-                      <div className={`w-12 h-12 ${action.color} rounded-lg flex items-center justify-center text-white mb-4`}>
-                        {action.icon}
-                      </div>
-                      <h3 className="text-lg font-semibold text-gray-900 mb-2">{action.title}</h3>
-                      <p className="text-gray-600 text-sm">{action.description}</p>
-                    </CardContent>
-                  </Card>
+          {/* Chef Modes */}
+          <div className="mb-12">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">Choose Your Chef Mode</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {/* PantryChef */}
+              <Card className="hover:shadow-lg transition-shadow cursor-pointer group" asChild>
+                <Link href="/pantry-chef">
+                  <CardHeader className="text-center pb-4">
+                    <div className="w-16 h-16 mx-auto mb-4 bg-chef-orange/10 rounded-full flex items-center justify-center group-hover:bg-chef-orange/20 transition-colors">
+                      <Package className="w-8 h-8 text-chef-orange" />
+                    </div>
+                    <CardTitle className="text-xl">🥫 PantryChef</CardTitle>
+                    <CardDescription className="text-center">
+                      Transform your pantry ingredients into delicious meals
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="text-center">
+                    <Badge variant="secondary" className="bg-chef-orange/10 text-chef-orange">
+                      Use Available Ingredients
+                    </Badge>
+                  </CardContent>
                 </Link>
-              ))}
+              </Card>
+
+              {/* MealPlanChef */}
+              <Card className="hover:shadow-lg transition-shadow cursor-pointer group" asChild>
+                <Link href="/meal-plan-chef">
+                  <CardHeader className="text-center pb-4">
+                    <div className="w-16 h-16 mx-auto mb-4 bg-chef-orange/10 rounded-full flex items-center justify-center group-hover:bg-chef-orange/20 transition-colors">
+                      <Calendar className="w-8 h-8 text-chef-orange" />
+                    </div>
+                    <CardTitle className="text-xl">📆 MealPlanChef</CardTitle>
+                    <CardDescription className="text-center">
+                      AI-powered weekly meal plans for your goals
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="text-center">
+                    <Badge variant="secondary" className="bg-chef-orange/10 text-chef-orange">
+                      Personalized Nutrition
+                    </Badge>
+                  </CardContent>
+                </Link>
+              </Card>
+
+              {/* MasterChef */}
+              <Card className="hover:shadow-lg transition-shadow cursor-pointer group" asChild>
+                <Link href="/master-chef">
+                  <CardHeader className="text-center pb-4">
+                    <div className="w-16 h-16 mx-auto mb-4 bg-chef-orange/10 rounded-full flex items-center justify-center group-hover:bg-chef-orange/20 transition-colors">
+                      <Award className="w-8 h-8 text-chef-orange" />
+                    </div>
+                    <CardTitle className="text-xl">👨‍🍳 MasterChef</CardTitle>
+                    <CardDescription className="text-center">
+                      Restaurant-quality recipes and cooking techniques
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="text-center">
+                    <Badge variant="secondary" className="bg-chef-orange/10 text-chef-orange">
+                      Professional Recipes
+                    </Badge>
+                  </CardContent>
+                </Link>
+              </Card>
+
+              {/* MacrosChef */}
+              <Card className="hover:shadow-lg transition-shadow cursor-pointer group" asChild>
+                <Link href="/macros-chef">
+                  <CardHeader className="text-center pb-4">
+                    <div className="w-16 h-16 mx-auto mb-4 bg-chef-orange/10 rounded-full flex items-center justify-center group-hover:bg-chef-orange/20 transition-colors">
+                      <Target className="w-8 h-8 text-chef-orange" />
+                    </div>
+                    <CardTitle className="text-xl">💪 MacrosChef</CardTitle>
+                    <CardDescription className="text-center">
+                      Hit your macro targets with precision cooking
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="text-center">
+                    <Badge variant="secondary" className="bg-chef-orange/10 text-chef-orange">
+                      Macro Tracking
+                    </Badge>
+                  </CardContent>
+                </Link>
+              </Card>
+
+              {/* MixologyMaestro */}
+              <Card className="hover:shadow-lg transition-shadow cursor-pointer group" asChild>
+                <Link href="/mixology-maestro">
+                  <CardHeader className="text-center pb-4">
+                    <div className="w-16 h-16 mx-auto mb-4 bg-chef-orange/10 rounded-full flex items-center justify-center group-hover:bg-chef-orange/20 transition-colors">
+                      <ChefHat className="w-8 h-8 text-chef-orange" />
+                    </div>
+                    <CardTitle className="text-xl">🍸 MixologyMaestro</CardTitle>
+                    <CardDescription className="text-center">
+                      Craft perfect cocktails and beverages
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="text-center">
+                    <Badge variant="secondary" className="bg-chef-orange/10 text-chef-orange">
+                      Cocktail Creation
+                    </Badge>
+                  </CardContent>
+                </Link>
+              </Card>
+
+              {/* Calorie Tracker */}
+              <Card className="hover:shadow-lg transition-shadow cursor-pointer group" asChild>
+                <Link href="/calorie-tracker">
+                  <CardHeader className="text-center pb-4">
+                    <div className="w-16 h-16 mx-auto mb-4 bg-chef-orange/10 rounded-full flex items-center justify-center group-hover:bg-chef-orange/20 transition-colors">
+                      <Camera className="w-8 h-8 text-chef-orange" />
+                    </div>
+                    <CardTitle className="text-xl">📸 Calorie Tracker</CardTitle>
+                    <CardDescription className="text-center">
+                      AI-powered photo food logging and tracking
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="text-center">
+                    <Badge variant="secondary" className="bg-chef-orange/10 text-chef-orange">
+                      Photo Analysis
+                    </Badge>
+                  </CardContent>
+                </Link>
+              </Card>
+            </div>
+          </div>
+
+          {/* Quick Access Tools */}
+          <div className="mb-12">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">Quick Access</h2>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <Button variant="outline" className="h-20 flex flex-col space-y-2" asChild>
+                <Link href="/pantry">
+                  <Package className="w-6 h-6" />
+                  <span>My Pantry</span>
+                </Link>
+              </Button>
+              <Button variant="outline" className="h-20 flex flex-col space-y-2" asChild>
+                <Link href="/cookbook">
+                  <Book className="w-6 h-6" />
+                  <span>Cookbook</span>
+                </Link>
+              </Button>
+              <Button variant="outline" className="h-20 flex flex-col space-y-2" asChild>
+                <Link href="/calorie-tracker">
+                  <TrendingUp className="w-6 h-6" />
+                  <span>Progress</span>
+                </Link>
+              </Button>
+              <Button variant="outline" className="h-20 flex flex-col space-y-2" asChild>
+                <Link href="/meal-plan-chef">
+                  <Clock className="w-6 h-6" />
+                  <span>Quick Meal</span>
+                </Link>
+              </Button>
             </div>
           </div>
 
           {/* Recent Activity */}
-          <div className="grid lg:grid-cols-2 gap-8">
-            {/* Recent Recipes */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <BookOpen className="h-5 w-5 mr-2" />
-                  Recent Recipes
-                </CardTitle>
-                <CardDescription>Your latest culinary creations</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {recipes.slice(0, 5).map((recipe: any) => (
-                    <div key={recipe.id} className="flex items-center justify-between border-b pb-2">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">Recent Activity</h2>
+            <div className="space-y-4">
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                        <ChefHat className="w-5 h-5 text-green-600" />
+                      </div>
                       <div>
-                        <p className="font-medium text-gray-900">{recipe.title}</p>
-                        <p className="text-sm text-gray-600">
-                          <Clock className="h-4 w-4 inline mr-1" />
-                          {recipe.cookingTime || 0} mins
-                        </p>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        {recipe.isFavorite && (
-                          <Badge variant="secondary">Favorite</Badge>
-                        )}
-                        <Badge>{recipe.mealType || 'Recipe'}</Badge>
+                        <p className="font-medium">Created "Spicy Thai Basil Chicken"</p>
+                        <p className="text-sm text-gray-500">2 hours ago</p>
                       </div>
                     </div>
-                  ))}
-                  {recipes.length === 0 && (
-                    <div className="text-center py-8 text-gray-500">
-                      <Utensils className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                      <p>No recipes yet. Create your first recipe!</p>
-                      <Button className="mt-4 bg-chef-orange hover:bg-orange-600" asChild>
-                        <Link href="/pantry-chef">Get Started</Link>
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
+                    <Badge variant="secondary">New Recipe</Badge>
+                  </div>
+                </CardContent>
+              </Card>
 
-            {/* Meal Plans */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Calendar className="h-5 w-5 mr-2" />
-                  Meal Plans
-                </CardTitle>
-                <CardDescription>Your upcoming meal schedules</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {mealPlans.slice(0, 3).map((plan: any) => (
-                    <div key={plan.id} className="border rounded-lg p-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <h4 className="font-medium">{plan.name}</h4>
-                        <Badge>{plan.goal}</Badge>
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                        <Calendar className="w-5 h-5 text-blue-600" />
                       </div>
-                      <p className="text-sm text-gray-600">
-                        {new Date(plan.startDate).toLocaleDateString()} - {new Date(plan.endDate).toLocaleDateString()}
-                      </p>
-                      <p className="text-sm text-gray-500 mt-1">
-                        {plan.meals.length} days planned
-                      </p>
+                      <div>
+                        <p className="font-medium">Generated 7-day meal plan</p>
+                        <p className="text-sm text-gray-500">Yesterday</p>
+                      </div>
                     </div>
-                  ))}
-                  {mealPlans.length === 0 && (
-                    <div className="text-center py-8 text-gray-500">
-                      <Calendar className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                      <p>No meal plans yet. Create your first plan!</p>
-                      <Button className="mt-4 bg-chef-orange hover:bg-orange-600" asChild>
-                        <Link href="/meal-plan-chef">Create Meal Plan</Link>
-                      </Button>
+                    <Badge variant="secondary">Meal Plan</Badge>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
+                        <Package className="w-5 h-5 text-purple-600" />
+                      </div>
+                      <div>
+                        <p className="font-medium">Added 5 items to pantry</p>
+                        <p className="text-sm text-gray-500">2 days ago</p>
+                      </div>
                     </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
+                    <Badge variant="secondary">Pantry Update</Badge>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </div>
         </div>
       </div>
+
+      <Footer />
     </div>
   );
 }
