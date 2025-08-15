@@ -179,9 +179,21 @@ export async function generateMealPlan(params: MealPlanParams): Promise<MealPlan
       throw new Error('No valid JSON found in response');
     }
 
-    const jsonResult = JSON.parse(jsonMatch[0]);
+    let jsonText = jsonMatch[0];
+    
+    // Clean up common JSON formatting issues
+    jsonText = jsonText
+      .replace(/,(\s*[}\]])/g, '$1') // Remove trailing commas
+      .replace(/([{,]\s*)(\w+):/g, '$1"$2":') // Add quotes around unquoted keys
+      .replace(/:\s*'([^']*)'/g, ': "$1"') // Replace single quotes with double quotes
+      .replace(/\n/g, ' ') // Remove newlines
+      .replace(/\s+/g, ' '); // Normalize whitespace
+
+    const jsonResult = JSON.parse(jsonText);
     return jsonResult as MealPlan;
   } catch (error) {
+    console.error('Raw response text:', text);
+    console.error('JSON parsing error:', error);
     throw new Error(`Failed to generate meal plan: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }
