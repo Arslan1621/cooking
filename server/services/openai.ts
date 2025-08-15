@@ -1,4 +1,3 @@
-
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 // Initialize Gemini API
@@ -102,23 +101,23 @@ interface CalorieAnalysis {
 
 export async function generateRecipe(params: RecipeGenerationParams): Promise<GeneratedRecipe> {
   const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-  
+
   const systemPrompt = getRecipeSystemPrompt(params.chefMode);
   const userPrompt = buildRecipeUserPrompt(params);
-  
+
   const fullPrompt = `${systemPrompt}\n\n${userPrompt}`;
 
   try {
     const result = await model.generateContent(fullPrompt);
     const response = await result.response;
     const text = response.text();
-    
+
     // Extract JSON from response
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
       throw new Error('No valid JSON found in response');
     }
-    
+
     const jsonResult = JSON.parse(jsonMatch[0]);
     return validateAndFormatRecipe(jsonResult);
   } catch (error) {
@@ -128,17 +127,17 @@ export async function generateRecipe(params: RecipeGenerationParams): Promise<Ge
 
 export async function generateMealPlan(params: MealPlanParams): Promise<MealPlan> {
   const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-  
+
   const systemPrompt = `You are MealPlanChef, an AI nutritionist and meal planning expert. Create personalized meal plans based on user goals, dietary restrictions, and nutritional needs. Always respond with valid JSON.`;
-  
+
   const userPrompt = `Create a ${params.days}-day meal plan for:
     - Goal: ${params.goal}
     - Dietary restrictions: ${params.dietaryRestrictions.join(', ') || 'None'}
     - Activity level: ${params.activityLevel}
     - User stats: ${params.userStats.gender}, ${params.userStats.age} years, ${params.userStats.weight}kg, ${params.userStats.height}cm
-    
+
     Include breakfast, lunch, and dinner for each day. Provide detailed recipes with ingredients, instructions, prep/cook times, and accurate nutritional information.
-    
+
     Respond with JSON in this format:
     {
       "totalCalories": number,
@@ -173,13 +172,13 @@ export async function generateMealPlan(params: MealPlanParams): Promise<MealPlan
     const result = await model.generateContent(fullPrompt);
     const response = await result.response;
     const text = response.text();
-    
+
     // Extract JSON from response
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
       throw new Error('No valid JSON found in response');
     }
-    
+
     const jsonResult = JSON.parse(jsonMatch[0]);
     return jsonResult as MealPlan;
   } catch (error) {
@@ -189,7 +188,7 @@ export async function generateMealPlan(params: MealPlanParams): Promise<MealPlan
 
 export async function analyzeFood(base64Image: string): Promise<CalorieAnalysis> {
   const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-  
+
   const systemPrompt = `You are an expert nutritionist and food analyst. Analyze food images to identify ingredients, estimate portions, and calculate nutritional information. Be as accurate as possible with calorie and macro estimations.`;
 
   const userPrompt = `Analyze this food image and provide detailed nutritional information. Identify all visible foods, estimate portion sizes, and calculate calories and macronutrients.
@@ -221,16 +220,16 @@ export async function analyzeFood(base64Image: string): Promise<CalorieAnalysis>
         }
       }
     ]);
-    
+
     const response = await result.response;
     const text = response.text();
-    
+
     // Extract JSON from response
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
       throw new Error('No valid JSON found in response');
     }
-    
+
     const jsonResult = JSON.parse(jsonMatch[0]);
     return jsonResult as CalorieAnalysis;
   } catch (error) {
@@ -240,7 +239,7 @@ export async function analyzeFood(base64Image: string): Promise<CalorieAnalysis>
 
 function getRecipeSystemPrompt(chefMode: string): string {
   const basePrompt = "You are a professional chef AI assistant. Create detailed, accurate recipes with proper nutritional information. Always respond with valid JSON.";
-  
+
   switch (chefMode) {
     case 'pantry':
       return `${basePrompt} You are PantryChef - focus on using available ingredients efficiently to minimize waste.`;
@@ -259,39 +258,39 @@ function getRecipeSystemPrompt(chefMode: string): string {
 
 function buildRecipeUserPrompt(params: RecipeGenerationParams): string {
   let prompt = `Create a recipe with the following requirements:`;
-  
+
   if (params.ingredients?.length) {
     prompt += `\n- Use these ingredients: ${params.ingredients.join(', ')}`;
   }
-  
+
   if (params.mealType) {
     prompt += `\n- Meal type: ${params.mealType}`;
   }
-  
+
   if (params.cuisine) {
     prompt += `\n- Cuisine: ${params.cuisine}`;
   }
-  
+
   if (params.dietaryRestrictions?.length) {
     prompt += `\n- Dietary restrictions: ${params.dietaryRestrictions.join(', ')}`;
   }
-  
+
   if (params.cookingTime) {
     prompt += `\n- Maximum cooking time: ${params.cookingTime} minutes`;
   }
-  
+
   if (params.servings) {
     prompt += `\n- Servings: ${params.servings}`;
   }
-  
+
   if (params.difficulty) {
     prompt += `\n- Difficulty level: ${params.difficulty}`;
   }
-  
+
   if (params.equipment?.length) {
     prompt += `\n- Available equipment: ${params.equipment.join(', ')}`;
   }
-  
+
   if (params.macroTargets) {
     prompt += `\n- Target nutrition per serving:`;
     if (params.macroTargets.calories) prompt += ` ${params.macroTargets.calories} calories`;
@@ -299,7 +298,7 @@ function buildRecipeUserPrompt(params: RecipeGenerationParams): string {
     if (params.macroTargets.carbs) prompt += ` ${params.macroTargets.carbs}g carbs`;
     if (params.macroTargets.fat) prompt += ` ${params.macroTargets.fat}g fat`;
   }
-  
+
   prompt += `\n\nRespond with JSON in this exact format:
   {
     "title": string,
@@ -316,7 +315,7 @@ function buildRecipeUserPrompt(params: RecipeGenerationParams): string {
     "cuisine": string,
     "tips": string[]
   }`;
-  
+
   return prompt;
 }
 
