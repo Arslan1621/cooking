@@ -1,9 +1,9 @@
-import OpenAI from "openai";
 
-// the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
-const openai = new OpenAI({ 
-  apiKey: process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY_ENV_VAR || "default_key" 
-});
+import { GoogleGenerativeAI } from "@google/generative-ai";
+
+const genAI = new GoogleGenerativeAI(
+  process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || "default_key"
+);
 
 interface RecipeGenerationParams {
   ingredients?: string[];
@@ -102,28 +102,31 @@ interface CalorieAnalysis {
 }
 
 export async function generateRecipe(params: RecipeGenerationParams): Promise<GeneratedRecipe> {
+  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
   const systemPrompt = getRecipeSystemPrompt(params.chefMode);
   const userPrompt = buildRecipeUserPrompt(params);
 
   try {
-    const response = await openai.chat.completions.create({
-      model: "gpt-4o",
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: userPrompt }
-      ],
-      response_format: { type: "json_object" },
-      temperature: 0.7,
-    });
-
-    const result = JSON.parse(response.choices[0].message.content || "{}");
-    return validateAndFormatRecipe(result);
+    const prompt = `${systemPrompt}\n\n${userPrompt}`;
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const text = response.text();
+    
+    // Extract JSON from response
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      throw new Error("No valid JSON found in response");
+    }
+    
+    const parsedResult = JSON.parse(jsonMatch[0]);
+    return validateAndFormatRecipe(parsedResult);
   } catch (error) {
     throw new Error(`Failed to generate recipe: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }
 
 export async function generateMealPlan(params: MealPlanParams): Promise<MealPlan> {
+  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
   const systemPrompt = `You are MealPlanChef, an AI nutritionist and meal planning expert. Create personalized meal plans based on user goals, dietary restrictions, and nutritional needs. Always respond with valid JSON.`;
   
   const userPrompt = `Create a ${params.days}-day meal plan for:
@@ -163,24 +166,26 @@ export async function generateMealPlan(params: MealPlanParams): Promise<MealPlan
     }`;
 
   try {
-    const response = await openai.chat.completions.create({
-      model: "gpt-4o",
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: userPrompt }
-      ],
-      response_format: { type: "json_object" },
-      temperature: 0.7,
-    });
-
-    const result = JSON.parse(response.choices[0].message.content || "{}");
-    return result as MealPlan;
+    const prompt = `${systemPrompt}\n\n${userPrompt}`;
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const text = response.text();
+    
+    // Extract JSON from response
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      throw new Error("No valid JSON found in response");
+    }
+    
+    const parsedResult = JSON.parse(jsonMatch[0]);
+    return parsedResult as MealPlan;
   } catch (error) {
     throw new Error(`Failed to generate meal plan: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }
 
 export async function analyzeFood(base64Image: string): Promise<CalorieAnalysis> {
+  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
   const systemPrompt = `You are an expert nutritionist and food analyst. Analyze food images to identify ingredients, estimate portions, and calculate nutritional information. Be as accurate as possible with calorie and macro estimations.`;
 
   const userPrompt = `Analyze this food image and provide detailed nutritional information. Identify all visible foods, estimate portion sizes, and calculate calories and macronutrients.
@@ -201,27 +206,26 @@ export async function analyzeFood(base64Image: string): Promise<CalorieAnalysis>
   }`;
 
   try {
-    const response = await openai.chat.completions.create({
-      model: "gpt-4o",
-      messages: [
-        { role: "system", content: systemPrompt },
-        {
-          role: "user",
-          content: [
-            { type: "text", text: userPrompt },
-            {
-              type: "image_url",
-              image_url: { url: `data:image/jpeg;base64,${base64Image}` }
-            }
-          ]
-        }
-      ],
-      response_format: { type: "json_object" },
-      temperature: 0.3,
-    });
+    const imagePart = {
+      inlineData: {
+        data: base64Image,
+        mimeType: "image/jpeg"
+      }
+    };
 
-    const result = JSON.parse(response.choices[0].message.content || "{}");
-    return result as CalorieAnalysis;
+    const prompt = `${systemPrompt}\n\n${userPrompt}`;
+    const result = await model.generateContent([prompt, imagePart]);
+    const response = await result.response;
+    const text = response.text();
+    
+    // Extract JSON from response
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      throw new Error("No valid JSON found in response");
+    }
+    
+    const parsedResult = JSON.parse(jsonMatch[0]);
+    return parsedResult as CalorieAnalysis;
   } catch (error) {
     throw new Error(`Failed to analyze food image: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
