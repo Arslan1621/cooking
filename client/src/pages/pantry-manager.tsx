@@ -30,7 +30,7 @@ import { Plus, Package, Edit, Trash2, Calendar, Loader2, Search } from "lucide-r
 import { format, isAfter, differenceInDays } from "date-fns";
 
 const categories = [
-  "Vegetables", "Fruits", "Meat & Poultry", "Seafood", "Dairy", "Grains & Cereals", 
+  "Vegetables", "Fruits", "Meat & Poultry", "Seafood", "Dairy", "Grains & Cereals",
   "Herbs & Spices", "Condiments", "Beverages", "Frozen", "Canned", "Other"
 ];
 
@@ -238,7 +238,7 @@ export default function PantryManager() {
     const expiry = new Date(expiryDate);
     const today = new Date();
     const daysUntilExpiry = differenceInDays(expiry, today);
-    
+
     if (daysUntilExpiry < 0) return { status: 'expired', color: 'bg-red-500', text: 'Expired' };
     if (daysUntilExpiry <= 3) return { status: 'expiring', color: 'bg-orange-500', text: `${daysUntilExpiry}d left` };
     if (daysUntilExpiry <= 7) return { status: 'warning', color: 'bg-yellow-500', text: `${daysUntilExpiry}d left` };
@@ -267,7 +267,7 @@ export default function PantryManager() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Navigation />
-      
+
       <main className="pt-20 pb-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}
@@ -330,7 +330,7 @@ export default function PantryManager() {
                 />
               </div>
             </div>
-            
+
             <Select value={selectedCategory} onValueChange={setSelectedCategory}>
               <SelectTrigger className="w-full md:w-48">
                 <SelectValue placeholder="Filter by category" />
@@ -367,7 +367,7 @@ export default function PantryManager() {
                       placeholder="e.g., Olive Oil, Chicken Breast"
                     />
                   </div>
-                  
+
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <Label htmlFor="quantity">Quantity</Label>
@@ -507,7 +507,7 @@ export default function PantryManager() {
                   {searchQuery || selectedCategory !== "All" ? "No items found" : "Your pantry is empty"}
                 </h3>
                 <p className="text-gray-600 mb-6">
-                  {searchQuery || selectedCategory !== "All" 
+                  {searchQuery || selectedCategory !== "All"
                     ? "Try adjusting your search or filter criteria"
                     : "Start by adding ingredients to track your kitchen inventory"
                   }
@@ -544,7 +544,7 @@ export default function PantryManager() {
                       onChange={(e) => setEditingItem(prev => ({ ...prev, name: e.target.value }))}
                     />
                   </div>
-                  
+
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <Label htmlFor="editQuantity">Quantity</Label>
@@ -610,7 +610,7 @@ export default function PantryManager() {
                   )}
                 </Button>
               </DialogFooter>
-            </Dialog>
+            </DialogContent>
           </Dialog>
         </div>
       </main>
