@@ -68,10 +68,7 @@ export default function PantryChef() {
         ...data,
         chefMode: 'pantry',
       };
-      return await apiRequest("/api/recipes/generate", {
-        method: "POST",
-        body: params,
-      });
+      return await apiRequest("POST", "/api/recipes/generate", params);
     },
     onSuccess: (recipe: Recipe) => {
       setGeneratedRecipe(recipe);

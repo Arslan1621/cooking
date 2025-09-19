@@ -64,10 +64,7 @@ export default function MealPlanChef() {
 
   const generateMealPlanMutation = useMutation({
     mutationFn: async (data: MealPlanForm) => {
-      return await apiRequest("/api/meal-plans/generate", {
-        method: "POST",
-        body: data,
-      });
+      return await apiRequest("POST", "/api/meal-plans/generate", data);
     },
     onSuccess: (mealPlan: MealPlan) => {
       setGeneratedMealPlan(mealPlan);

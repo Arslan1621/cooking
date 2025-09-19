@@ -73,10 +73,7 @@ export default function MasterChef() {
         dietaryRestrictions: data.dietaryRestrictions,
         chefMode: 'master',
       };
-      return await apiRequest("/api/recipes/generate", {
-        method: "POST",
-        body: params,
-      });
+      return await apiRequest("POST", "/api/recipes/generate", params);
     },
     onSuccess: (recipe: Recipe) => {
       setGeneratedRecipe(recipe);
