@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
+import { SignInButton, SignUpButton, UserButton } from "@clerk/clerk-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -15,7 +16,6 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 
 export function Navigation() {
@@ -141,55 +141,23 @@ export function Navigation() {
           <div className="flex items-center space-x-4">
             {isLoading ? (
               <div className="w-8 h-8 animate-pulse bg-gray-200 rounded-full"></div>
-            ) : isAuthenticated && user ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger className="flex items-center space-x-2">
-                  <Avatar className="w-8 h-8">
-                    <AvatarImage src={user.profileImageUrl || ""} alt={user.firstName || ""} />
-                    <AvatarFallback>
-                      {(user.firstName?.[0] || "") + (user.lastName?.[0] || "")}
-                    </AvatarFallback>
-                  </Avatar>
-                  <span className="hidden md:block text-gray-700 font-medium">
-                    {user.firstName}
-                  </span>
-                  <i className="fas fa-chevron-down text-xs text-gray-500"></i>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                  <DropdownMenuItem asChild>
-                    <Link href="/profile" className="w-full">
-                      <i className="fas fa-user mr-2"></i>
-                      Profile
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/dashboard" className="w-full">
-                      <i className="fas fa-chart-line mr-2"></i>
-                      Dashboard
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/pricing" className="w-full">
-                      <i className="fas fa-crown mr-2"></i>
-                      Upgrade to Pro
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <a href="/api/logout" className="w-full">
-                      <i className="fas fa-sign-out-alt mr-2"></i>
-                      Sign Out
-                    </a>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+            ) : isAuthenticated ? (
+              <UserButton 
+                afterSignOutUrl="/"
+                appearance={{
+                  elements: {
+                    avatarBox: "w-8 h-8"
+                  }
+                }}
+              />
             ) : (
               <>
-                <Button variant="ghost" asChild>
-                  <a href="/api/login">Sign In</a>
-                </Button>
-                <Button asChild>
-                  <a href="/api/login">Sign Up</a>
-                </Button>
+                <SignInButton mode="modal">
+                  <Button variant="ghost">Sign In</Button>
+                </SignInButton>
+                <SignUpButton mode="modal">
+                  <Button>Sign Up</Button>
+                </SignUpButton>
               </>
             )}
 
@@ -227,12 +195,12 @@ export function Navigation() {
                         <span>Pricing</span>
                       </Link>
                       <div className="pt-4 space-y-2">
-                        <Button variant="outline" className="w-full" asChild>
-                          <a href="/api/login">Sign In</a>
-                        </Button>
-                        <Button className="w-full" asChild>
-                          <a href="/api/login">Sign Up</a>
-                        </Button>
+                        <SignInButton mode="modal">
+                          <Button variant="outline" className="w-full">Sign In</Button>
+                        </SignInButton>
+                        <SignUpButton mode="modal">
+                          <Button className="w-full">Sign Up</Button>
+                        </SignUpButton>
                       </div>
                     </>
                   )}

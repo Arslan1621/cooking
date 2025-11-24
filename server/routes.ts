@@ -1,20 +1,38 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { setupAuth, isAuthenticated } from "./replitAuth";
+import { setupClerkAuth, isAuthenticated, getUserId } from "./clerkAuth";
 import { generateRecipe, generateMealPlan, analyzeFood, type RecipeGenerationParams, type MealPlanParams } from "./services/ai";
 import { insertRecipeSchema, insertCalorieEntrySchema, insertMealPlanSchema, insertPantryItemSchema, insertShoppingListSchema } from "@shared/schema";
 import { z } from "zod";
+import { clerkClient } from '@clerk/express';
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
-  await setupAuth(app);
+  setupClerkAuth(app);
 
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
+      const userId = getUserId(req);
+      
+      // Get user from storage, create if doesn't exist
+      let user = await storage.getUser(userId);
+      
+      if (!user) {
+        // Fetch user details from Clerk
+        const clerkUser = await clerkClient.users.getUser(userId);
+        
+        // Create user in our storage
+        user = await storage.upsertUser({
+          id: userId,
+          email: clerkUser.emailAddresses[0]?.emailAddress || null,
+          firstName: clerkUser.firstName || null,
+          lastName: clerkUser.lastName || null,
+          profileImageUrl: clerkUser.imageUrl || null,
+        });
+      }
+      
       res.json(user);
     } catch (error) {
       console.error("Error fetching user:", error);
@@ -25,7 +43,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // User profile routes
   app.patch('/api/profile', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = getUserId(req);
       const user = await storage.updateUserProfile(userId, req.body);
       res.json(user);
     } catch (error) {
@@ -41,7 +59,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const generatedRecipe = await generateRecipe(params);
       
       // Save recipe to database
-      const userId = req.user.claims.sub;
+      const userId = getUserId(req);
       const recipe = await storage.createRecipe({
         userId,
         title: generatedRecipe.title,
@@ -69,7 +87,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/recipes', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = getUserId(req);
       const recipes = await storage.getUserRecipes(userId);
       res.json(recipes);
     } catch (error) {
@@ -104,7 +122,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Saved recipes routes
   app.post('/api/recipes/:id/save', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = getUserId(req);
       const recipeId = req.params.id;
       const { collectionName } = req.body;
       
@@ -123,7 +141,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/saved-recipes', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = getUserId(req);
       const savedRecipes = await storage.getUserSavedRecipes(userId);
       res.json(savedRecipes);
     } catch (error) {
@@ -134,7 +152,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete('/api/recipes/:id/save', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = getUserId(req);
       const recipeId = req.params.id;
       await storage.unsaveRecipe(userId, recipeId);
       res.json({ message: "Recipe unsaved successfully" });
@@ -147,7 +165,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Meal plan routes
   app.post('/api/meal-plans/generate', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = getUserId(req);
       const user = await storage.getUser(userId);
       
       if (!user) {
@@ -187,7 +205,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/meal-plans', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = getUserId(req);
       const mealPlans = await storage.getUserMealPlans(userId);
       res.json(mealPlans);
     } catch (error) {
@@ -223,7 +241,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/calories', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = getUserId(req);
       const entryData = insertCalorieEntrySchema.parse({
         ...req.body,
         userId,
@@ -242,7 +260,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/calories', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = getUserId(req);
       const { startDate, endDate } = req.query;
       
       const entries = await storage.getUserCalorieEntries(
@@ -271,7 +289,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Pantry routes
   app.post('/api/pantry', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = getUserId(req);
       const itemData = insertPantryItemSchema.parse({
         ...req.body,
         userId,
@@ -290,7 +308,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/pantry', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = getUserId(req);
       const items = await storage.getUserPantryItems(userId);
       res.json(items);
     } catch (error) {
@@ -322,7 +340,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Shopping list routes
   app.post('/api/shopping-lists', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = getUserId(req);
       const listData = insertShoppingListSchema.parse({
         ...req.body,
         userId,
@@ -341,7 +359,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/shopping-lists', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = getUserId(req);
       const lists = await storage.getUserShoppingLists(userId);
       res.json(lists);
     } catch (error) {

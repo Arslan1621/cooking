@@ -1,17 +1,22 @@
+import { useUser } from "@clerk/clerk-react";
 import { useQuery } from "@tanstack/react-query";
 import { type User } from "@shared/schema";
-import { getQueryFn } from "@/lib/queryClient";
 
 export function useAuth() {
-  const { data: user, isLoading } = useQuery<User>({
+  const { isSignedIn, isLoaded: clerkLoaded } = useUser();
+  
+  // Fetch user profile from our backend
+  const { data: user, isLoading: userLoading } = useQuery<User>({
     queryKey: ["/api/auth/user"],
-    queryFn: getQueryFn({ on401: "returnNull" }),
+    enabled: isSignedIn && clerkLoaded,
     retry: false,
   });
+
+  const isLoading = !clerkLoaded || (isSignedIn && userLoading);
 
   return {
     user,
     isLoading,
-    isAuthenticated: !!user,
+    isAuthenticated: !!isSignedIn,
   };
 }
