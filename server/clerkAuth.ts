@@ -2,8 +2,18 @@ import { clerkMiddleware, requireAuth, getAuth } from '@clerk/express';
 import type { Express, RequestHandler } from 'express';
 
 export function setupClerkAuth(app: Express) {
-  // Apply Clerk middleware to all routes
-  app.use(clerkMiddleware());
+  const publishableKey = process.env.CLERK_PUBLISHABLE_KEY;
+  const secretKey = process.env.CLERK_SECRET_KEY;
+
+  if (!publishableKey || !secretKey) {
+    throw new Error('Missing Clerk environment variables');
+  }
+
+  // Apply Clerk middleware to all routes with configuration
+  app.use(clerkMiddleware({
+    publishableKey,
+    secretKey,
+  }));
 }
 
 // Middleware to require authentication
