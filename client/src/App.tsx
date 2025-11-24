@@ -1,6 +1,9 @@
+import { useEffect } from "react";
 import { Switch, Route } from "wouter";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { useAuth as useClerkAuth } from "@clerk/clerk-react";
 import { useAuth } from "@/hooks/useAuth";
+import { setTokenGetter, queryClient } from "@/lib/queryClient";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
 import { Toaster } from "@/components/ui/toaster";
@@ -19,16 +22,14 @@ import Pantry from "@/pages/pantry";
 import NotFound from "@/pages/not-found";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      refetchOnWindowFocus: false,
-      retry: 1,
-    },
-  },
-});
-
 function Router() {
+  const { getToken } = useClerkAuth();
+  
+  // Set up token getter synchronously
+  if (getToken) {
+    setTokenGetter(getToken);
+  }
+  
   const { isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {

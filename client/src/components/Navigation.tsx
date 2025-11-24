@@ -142,21 +142,23 @@ export function Navigation() {
             {isLoading ? (
               <div className="w-8 h-8 animate-pulse bg-gray-200 rounded-full"></div>
             ) : isAuthenticated ? (
-              <UserButton 
-                afterSignOutUrl="/"
-                appearance={{
-                  elements: {
-                    avatarBox: "w-8 h-8"
-                  }
-                }}
-              />
+              <div data-testid="button-user-menu">
+                <UserButton 
+                  afterSignOutUrl="/"
+                  appearance={{
+                    elements: {
+                      avatarBox: "w-8 h-8"
+                    }
+                  }}
+                />
+              </div>
             ) : (
               <>
                 <SignInButton mode="modal">
-                  <Button variant="ghost">Sign In</Button>
+                  <Button variant="ghost" data-testid="button-sign-in">Sign In</Button>
                 </SignInButton>
                 <SignUpButton mode="modal">
-                  <Button>Sign Up</Button>
+                  <Button data-testid="button-sign-up">Sign Up</Button>
                 </SignUpButton>
               </>
             )}
@@ -196,10 +198,10 @@ export function Navigation() {
                       </Link>
                       <div className="pt-4 space-y-2">
                         <SignInButton mode="modal">
-                          <Button variant="outline" className="w-full">Sign In</Button>
+                          <Button variant="outline" className="w-full" data-testid="button-sign-in-mobile">Sign In</Button>
                         </SignInButton>
                         <SignUpButton mode="modal">
-                          <Button className="w-full">Sign Up</Button>
+                          <Button className="w-full" data-testid="button-sign-up-mobile">Sign Up</Button>
                         </SignUpButton>
                       </div>
                     </>
