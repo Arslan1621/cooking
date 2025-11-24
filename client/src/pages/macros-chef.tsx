@@ -77,10 +77,7 @@ export default function MacrosChef() {
   // Generate macro recipe mutation
   const generateRecipeMutation = useMutation({
     mutationFn: async (params: any) => {
-      return await apiRequest("/api/ai/generate-recipe", {
-        method: "POST",
-        body: JSON.stringify(params),
-      });
+      return await apiRequest("POST", "/api/recipes/generate", params);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/recipes"] });

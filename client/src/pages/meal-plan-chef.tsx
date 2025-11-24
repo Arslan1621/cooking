@@ -93,10 +93,7 @@ export default function MealPlanChef() {
   // Generate meal plan mutation
   const generateMealPlanMutation = useMutation({
     mutationFn: async (params: any) => {
-      return await apiRequest("/api/ai/generate-meal-plan", {
-        method: "POST",
-        body: JSON.stringify(params),
-      });
+      return await apiRequest("POST", "/api/meal-plans/generate", params);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/meal-plans"] });
