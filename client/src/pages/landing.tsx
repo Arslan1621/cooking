@@ -71,7 +71,7 @@ export default function Landing() {
                 <Button 
                   size="lg" 
                   className="bg-chef-orange hover:bg-chef-orange/90 w-fit"
-                  onClick={() => window.location.href = "/api/login"}
+                  onClick={() => window.location.href = "/dashboard"}
                 >
                   Get Started for free
                 </Button>
@@ -289,7 +289,7 @@ export default function Landing() {
                 <Button 
                   variant="outline" 
                   className="w-full"
-                  onClick={() => window.location.href = "/api/login"}
+                  onClick={() => window.location.href = "/dashboard"}
                 >
                   Get Started
                 </Button>
@@ -322,7 +322,7 @@ export default function Landing() {
                 </ul>
                 <Button 
                   className="w-full bg-chef-orange hover:bg-chef-orange/90"
-                  onClick={() => window.location.href = "/api/login"}
+                  onClick={() => window.location.href = "/dashboard"}
                 >
                   Get Started
                 </Button>
@@ -372,7 +372,7 @@ export default function Landing() {
           <Button 
             size="lg" 
             className="bg-chef-orange hover:bg-chef-orange/90"
-            onClick={() => window.location.href = "/api/login"}
+            onClick={() => window.location.href = "/dashboard"}
           >
             Get Started for free
           </Button>
