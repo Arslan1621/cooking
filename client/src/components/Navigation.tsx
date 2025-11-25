@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { SignInButton, SignUpButton, UserButton } from "@clerk/clerk-react";
+import { useSignIn, useSignUp } from "@clerk/clerk-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -22,6 +23,8 @@ export function Navigation() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [location] = useLocation();
   const { isAuthenticated, user, isLoading } = useAuth();
+  const { signIn } = useSignIn();
+  const { signUp } = useSignUp();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -154,12 +157,12 @@ export function Navigation() {
               </div>
             ) : (
               <>
-                <SignInButton mode="modal">
-                  <Button variant="ghost" data-testid="button-sign-in">Sign In</Button>
-                </SignInButton>
-                <SignUpButton mode="modal">
-                  <Button data-testid="button-sign-up">Sign Up</Button>
-                </SignUpButton>
+                <Button variant="ghost" data-testid="button-sign-in" onClick={() => signIn?.({ redirectUrl: "/" })}>
+                  Sign In
+                </Button>
+                <Button data-testid="button-sign-up" onClick={() => signUp?.({ redirectUrl: "/" })}>
+                  Sign Up
+                </Button>
               </>
             )}
 
@@ -197,12 +200,12 @@ export function Navigation() {
                         <span>Pricing</span>
                       </Link>
                       <div className="pt-4 space-y-2">
-                        <SignInButton mode="modal">
-                          <Button variant="outline" className="w-full" data-testid="button-sign-in-mobile">Sign In</Button>
-                        </SignInButton>
-                        <SignUpButton mode="modal">
-                          <Button className="w-full" data-testid="button-sign-up-mobile">Sign Up</Button>
-                        </SignUpButton>
+                        <Button variant="outline" className="w-full" data-testid="button-sign-in-mobile" onClick={() => signIn?.({ redirectUrl: "/" })}>
+                          Sign In
+                        </Button>
+                        <Button className="w-full" data-testid="button-sign-up-mobile" onClick={() => signUp?.({ redirectUrl: "/" })}>
+                          Sign Up
+                        </Button>
                       </div>
                     </>
                   )}
