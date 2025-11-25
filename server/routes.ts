@@ -20,17 +20,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let user = await storage.getUser(userId);
       
       if (!user) {
-        // Fetch user details from Clerk
-        const clerkUser = await clerkClient.users.getUser(userId);
-        
-        // Create user in our storage
-        user = await storage.upsertUser({
-          id: userId,
-          email: clerkUser.emailAddresses[0]?.emailAddress || null,
-          firstName: clerkUser.firstName || null,
-          lastName: clerkUser.lastName || null,
-          profileImageUrl: clerkUser.imageUrl || null,
-        });
+        if (!process.env.CLERK_PUBLISHABLE_KEY || !process.env.CLERK_SECRET_KEY) {
+          // Development mode - create a default user
+          user = await storage.upsertUser({
+            id: userId,
+            email: 'dev@example.com',
+            firstName: 'Dev',
+            lastName: 'User',
+            profileImageUrl: null,
+          });
+        } else {
+          // Fetch user details from Clerk
+          const clerkUser = await clerkClient.users.getUser(userId);
+          
+          // Create user in our storage
+          user = await storage.upsertUser({
+            id: userId,
+            email: clerkUser.emailAddresses[0]?.emailAddress || null,
+            firstName: clerkUser.firstName || null,
+            lastName: clerkUser.lastName || null,
+            profileImageUrl: clerkUser.imageUrl || null,
+          });
+        }
       }
       
       res.json(user);

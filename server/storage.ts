@@ -21,7 +21,6 @@ import {
   type ShoppingList,
   type InsertShoppingList,
 } from "@shared/schema";
-import { db } from "./db";
 import { eq, and, desc, asc, gte, lte } from "drizzle-orm";
 
 export interface IStorage {
@@ -70,14 +69,21 @@ export interface IStorage {
 }
 
 export class DatabaseStorage implements IStorage {
+  private db;
+  
+  constructor() {
+    const { db: database } = require("./db");
+    this.db = database;
+  }
+  
   // User operations
   async getUser(id: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.id, id));
+    const [user] = await this.db.select().from(users).where(eq(users.id, id));
     return user;
   }
 
   async upsertUser(userData: UpsertUser): Promise<User> {
-    const [user] = await db
+    const [user] = await this.db
       .insert(users)
       .values(userData)
       .onConflictDoUpdate({
@@ -92,7 +98,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateUserProfile(id: string, data: Partial<UpsertUser>): Promise<User> {
-    const [user] = await db
+    const [user] = await this.db
       .update(users)
       .set({ ...data, updatedAt: new Date() })
       .where(eq(users.id, id))
@@ -102,17 +108,17 @@ export class DatabaseStorage implements IStorage {
 
   // Recipe operations
   async createRecipe(recipe: InsertRecipe): Promise<Recipe> {
-    const [newRecipe] = await db.insert(recipes).values(recipe).returning();
+    const [newRecipe] = await this.db.insert(recipes).values(recipe).returning();
     return newRecipe;
   }
 
   async getRecipe(id: string): Promise<Recipe | undefined> {
-    const [recipe] = await db.select().from(recipes).where(eq(recipes.id, id));
+    const [recipe] = await this.db.select().from(recipes).where(eq(recipes.id, id));
     return recipe;
   }
 
   async getUserRecipes(userId: string): Promise<Recipe[]> {
-    return await db
+    return await this.db
       .select()
       .from(recipes)
       .where(eq(recipes.userId, userId))
@@ -120,7 +126,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateRecipe(id: string, data: Partial<InsertRecipe>): Promise<Recipe> {
-    const [recipe] = await db
+    const [recipe] = await this.db
       .update(recipes)
       .set(data)
       .where(eq(recipes.id, id))
@@ -129,7 +135,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteRecipe(id: string): Promise<void> {
-    await db.delete(recipes).where(eq(recipes.id, id));
+    await this.db.delete(recipes).where(eq(recipes.id, id));
   }
 
   async searchRecipes(query: string, userId?: string): Promise<Recipe[]> {
@@ -138,7 +144,7 @@ export class DatabaseStorage implements IStorage {
       conditions.push(eq(recipes.userId, userId));
     }
     
-    return await db
+    return await this.db
       .select()
       .from(recipes)
       .where(and(...conditions))
@@ -147,12 +153,12 @@ export class DatabaseStorage implements IStorage {
 
   // Saved recipes operations
   async saveRecipe(data: InsertSavedRecipe): Promise<SavedRecipe> {
-    const [savedRecipe] = await db.insert(savedRecipes).values(data).returning();
+    const [savedRecipe] = await this.db.insert(savedRecipes).values(data).returning();
     return savedRecipe;
   }
 
   async getUserSavedRecipes(userId: string): Promise<(SavedRecipe & { recipe: Recipe })[]> {
-    return await db
+    return await this.db
       .select({
         id: savedRecipes.id,
         userId: savedRecipes.userId,
@@ -168,14 +174,14 @@ export class DatabaseStorage implements IStorage {
   }
 
   async unsaveRecipe(userId: string, recipeId: string): Promise<void> {
-    await db
+    await this.db
       .delete(savedRecipes)
       .where(and(eq(savedRecipes.userId, userId), eq(savedRecipes.recipeId, recipeId)));
   }
 
   // Calorie tracking operations
   async createCalorieEntry(entry: InsertCalorieEntry): Promise<CalorieEntry> {
-    const [calorieEntry] = await db.insert(calorieEntries).values(entry).returning();
+    const [calorieEntry] = await this.db.insert(calorieEntries).values(entry).returning();
     return calorieEntry;
   }
 
@@ -193,7 +199,7 @@ export class DatabaseStorage implements IStorage {
       conditions.push(lte(calorieEntries.date, endDate));
     }
 
-    return await db
+    return await this.db
       .select()
       .from(calorieEntries)
       .where(and(...conditions))
@@ -201,7 +207,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateCalorieEntry(id: string, data: Partial<InsertCalorieEntry>): Promise<CalorieEntry> {
-    const [entry] = await db
+    const [entry] = await this.db
       .update(calorieEntries)
       .set(data)
       .where(eq(calorieEntries.id, id))
@@ -210,17 +216,17 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteCalorieEntry(id: string): Promise<void> {
-    await db.delete(calorieEntries).where(eq(calorieEntries.id, id));
+    await this.db.delete(calorieEntries).where(eq(calorieEntries.id, id));
   }
 
   // Meal plan operations
   async createMealPlan(mealPlan: InsertMealPlan): Promise<MealPlan> {
-    const [newMealPlan] = await db.insert(mealPlans).values(mealPlan).returning();
+    const [newMealPlan] = await this.db.insert(mealPlans).values(mealPlan).returning();
     return newMealPlan;
   }
 
   async getUserMealPlans(userId: string): Promise<MealPlan[]> {
-    return await db
+    return await this.db
       .select()
       .from(mealPlans)
       .where(eq(mealPlans.userId, userId))
@@ -228,12 +234,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getMealPlan(id: string): Promise<MealPlan | undefined> {
-    const [mealPlan] = await db.select().from(mealPlans).where(eq(mealPlans.id, id));
+    const [mealPlan] = await this.db.select().from(mealPlans).where(eq(mealPlans.id, id));
     return mealPlan;
   }
 
   async updateMealPlan(id: string, data: Partial<InsertMealPlan>): Promise<MealPlan> {
-    const [mealPlan] = await db
+    const [mealPlan] = await this.db
       .update(mealPlans)
       .set(data)
       .where(eq(mealPlans.id, id))
@@ -242,17 +248,17 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteMealPlan(id: string): Promise<void> {
-    await db.delete(mealPlans).where(eq(mealPlans.id, id));
+    await this.db.delete(mealPlans).where(eq(mealPlans.id, id));
   }
 
   // Pantry operations
   async createPantryItem(item: InsertPantryItem): Promise<PantryItem> {
-    const [pantryItem] = await db.insert(pantryItems).values(item).returning();
+    const [pantryItem] = await this.db.insert(pantryItems).values(item).returning();
     return pantryItem;
   }
 
   async getUserPantryItems(userId: string): Promise<PantryItem[]> {
-    return await db
+    return await this.db
       .select()
       .from(pantryItems)
       .where(eq(pantryItems.userId, userId))
@@ -260,7 +266,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updatePantryItem(id: string, data: Partial<InsertPantryItem>): Promise<PantryItem> {
-    const [item] = await db
+    const [item] = await this.db
       .update(pantryItems)
       .set(data)
       .where(eq(pantryItems.id, id))
@@ -269,17 +275,17 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deletePantryItem(id: string): Promise<void> {
-    await db.delete(pantryItems).where(eq(pantryItems.id, id));
+    await this.db.delete(pantryItems).where(eq(pantryItems.id, id));
   }
 
   // Shopping list operations
   async createShoppingList(list: InsertShoppingList): Promise<ShoppingList> {
-    const [shoppingList] = await db.insert(shoppingLists).values(list).returning();
+    const [shoppingList] = await this.db.insert(shoppingLists).values(list).returning();
     return shoppingList;
   }
 
   async getUserShoppingLists(userId: string): Promise<ShoppingList[]> {
-    return await db
+    return await this.db
       .select()
       .from(shoppingLists)
       .where(eq(shoppingLists.userId, userId))
@@ -287,7 +293,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateShoppingList(id: string, data: Partial<InsertShoppingList>): Promise<ShoppingList> {
-    const [list] = await db
+    const [list] = await this.db
       .update(shoppingLists)
       .set(data)
       .where(eq(shoppingLists.id, id))
@@ -296,7 +302,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteShoppingList(id: string): Promise<void> {
-    await db.delete(shoppingLists).where(eq(shoppingLists.id, id));
+    await this.db.delete(shoppingLists).where(eq(shoppingLists.id, id));
   }
 }
 
