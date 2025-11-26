@@ -73,7 +73,7 @@ export default function Pricing() {
               <TabsContent value="monthly" className="mt-8">
                 <div className="grid lg:grid-cols-2 gap-8 max-w-4xl mx-auto">
                   {/* Basic Plan */}
-                  <Card className="border-2 border-gray-200 relative">
+                  <Card className="border-2 border-gray-200 relative h-full flex flex-col">
                     <CardHeader className="text-center">
                       <div className="flex items-center justify-center w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full">
                         <Star className="w-8 h-8 text-gray-600" />
@@ -88,8 +88,8 @@ export default function Pricing() {
                         <span className="text-gray-600 ml-2">/Monthly</span>
                       </div>
                     </CardHeader>
-                    <CardContent>
-                      <ul className="space-y-3 mb-8">
+                    <CardContent className="flex-1 flex flex-col">
+                      <ul className="space-y-3 mb-8 flex-1">
                         {basicFeatures.map((feature, index) => (
                           <li key={index} className="flex items-start">
                             <Check className="text-green-500 mr-3 h-4 w-4 mt-0.5 flex-shrink-0" />
@@ -99,7 +99,7 @@ export default function Pricing() {
                       </ul>
                       <Button 
                         variant="outline" 
-                        className="w-full hover:bg-chef-orange hover:text-white hover:border-chef-orange"
+                        className="w-full hover:bg-chef-orange hover:text-white hover:border-chef-orange mt-auto"
                         onClick={() => window.location.href = "/api/login"}
                       >
                         Get Started
@@ -108,7 +108,7 @@ export default function Pricing() {
                   </Card>
 
                   {/* Pro Plan */}
-                  <Card className="border-2 border-chef-orange relative">
+                  <Card className="border-2 border-chef-orange relative h-full flex flex-col pt-6">
                     <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
                       <Badge className="bg-chef-orange text-white px-4 py-1">
                         3 DAYS FREE TRIAL
@@ -127,8 +127,8 @@ export default function Pricing() {
                         <span className="text-gray-600 ml-2">/Monthly</span>
                       </div>
                     </CardHeader>
-                    <CardContent>
-                      <ul className="space-y-3 mb-8">
+                    <CardContent className="flex-1 flex flex-col">
+                      <ul className="space-y-3 mb-8 flex-1">
                         {proFeatures.map((feature, index) => (
                           <li key={index} className="flex items-start">
                             <Check className="text-green-500 mr-3 h-4 w-4 mt-0.5 flex-shrink-0" />
@@ -137,7 +137,7 @@ export default function Pricing() {
                         ))}
                       </ul>
                       <Button 
-                        className="w-full bg-chef-orange hover:bg-chef-orange/90"
+                        className="w-full bg-chef-orange hover:bg-chef-orange/90 mt-auto"
                         onClick={() => window.location.href = "/api/login"}
                       >
                         Start Free Trial
@@ -151,7 +151,7 @@ export default function Pricing() {
               <TabsContent value="yearly" className="mt-8">
                 <div className="grid lg:grid-cols-2 gap-8 max-w-4xl mx-auto">
                   {/* Basic Plan */}
-                  <Card className="border-2 border-gray-200 relative">
+                  <Card className="border-2 border-gray-200 relative h-full flex flex-col">
                     <CardHeader className="text-center">
                       <div className="flex items-center justify-center w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full">
                         <Star className="w-8 h-8 text-gray-600" />
@@ -166,8 +166,8 @@ export default function Pricing() {
                         <span className="text-gray-600 ml-2">/Monthly</span>
                       </div>
                     </CardHeader>
-                    <CardContent>
-                      <ul className="space-y-3 mb-8">
+                    <CardContent className="flex-1 flex flex-col">
+                      <ul className="space-y-3 mb-8 flex-1">
                         {basicFeatures.map((feature, index) => (
                           <li key={index} className="flex items-start">
                             <Check className="text-green-500 mr-3 h-4 w-4 mt-0.5 flex-shrink-0" />
@@ -177,7 +177,7 @@ export default function Pricing() {
                       </ul>
                       <Button 
                         variant="outline" 
-                        className="w-full hover:bg-chef-orange hover:text-white hover:border-chef-orange"
+                        className="w-full hover:bg-chef-orange hover:text-white hover:border-chef-orange mt-auto"
                         onClick={() => window.location.href = "/api/login"}
                       >
                         Get Started
@@ -186,7 +186,7 @@ export default function Pricing() {
                   </Card>
 
                   {/* Pro Plan */}
-                  <Card className="border-2 border-chef-orange relative">
+                  <Card className="border-2 border-chef-orange relative h-full flex flex-col pt-6">
                     <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
                       <Badge className="bg-green-500 text-white px-4 py-1">
                         {yearlyPricing.pro.savings}
@@ -211,8 +211,8 @@ export default function Pricing() {
                         <p className="text-sm text-green-600 mt-2">Billed annually ($107.88/year)</p>
                       </div>
                     </CardHeader>
-                    <CardContent>
-                      <ul className="space-y-3 mb-8">
+                    <CardContent className="flex-1 flex flex-col">
+                      <ul className="space-y-3 mb-8 flex-1">
                         {proFeatures.map((feature, index) => (
                           <li key={index} className="flex items-start">
                             <Check className="text-green-500 mr-3 h-4 w-4 mt-0.5 flex-shrink-0" />
@@ -221,7 +221,7 @@ export default function Pricing() {
                         ))}
                       </ul>
                       <Button 
-                        className="w-full bg-chef-orange hover:bg-chef-orange/90"
+                        className="w-full bg-chef-orange hover:bg-chef-orange/90 mt-auto"
                         onClick={() => window.location.href = "/api/login"}
                       >
                         Start Free Trial
