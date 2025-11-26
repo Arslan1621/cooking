@@ -73,7 +73,7 @@ export default function Pricing() {
               <TabsContent value="monthly" className="mt-8">
                 <div className="grid lg:grid-cols-2 gap-8 max-w-4xl mx-auto items-start">
                   {/* Basic Plan */}
-                  <Card className="border-2 border-gray-200 relative flex flex-col">
+                  <Card className="border-2 border-gray-200 relative flex flex-col pt-8">
                     <CardHeader className="text-center">
                       <div className="flex items-center justify-center w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full">
                         <Star className="w-8 h-8 text-gray-600" />
@@ -151,7 +151,7 @@ export default function Pricing() {
               <TabsContent value="yearly" className="mt-8">
                 <div className="grid lg:grid-cols-2 gap-8 max-w-4xl mx-auto items-start">
                   {/* Basic Plan */}
-                  <Card className="border-2 border-gray-200 relative flex flex-col">
+                  <Card className="border-2 border-gray-200 relative flex flex-col pt-8">
                     <CardHeader className="text-center">
                       <div className="flex items-center justify-center w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full">
                         <Star className="w-8 h-8 text-gray-600" />
