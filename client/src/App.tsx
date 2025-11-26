@@ -9,6 +9,7 @@ import { Footer } from "@/components/Footer";
 import { Toaster } from "@/components/ui/toaster";
 import Landing from "@/pages/landing";
 import Dashboard from "@/pages/dashboard";
+import Onboarding from "@/pages/onboarding";
 import PantryChef from "@/pages/pantry-chef";
 import MealPlanChef from "@/pages/meal-plan-chef";
 import MasterChef from "@/pages/master-chef";
@@ -33,7 +34,7 @@ function Router() {
     setTokenGetter(getToken);
   }
   
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth();
 
   if (isLoading) {
     return (
@@ -65,21 +66,31 @@ function Router() {
             </>
           ) : (
             <>
-              <Route path="/" component={Dashboard} />
-              <Route path="/dashboard" component={Dashboard} />
-              <Route path="/blog" component={Blog} />
-              <Route path="/faq" component={FAQ} />
-              <Route path="/pantry-chef" component={PantryChef} />
-              <Route path="/meal-plan-chef" component={MealPlanChef} />
-              <Route path="/master-chef" component={MasterChef} />
-              <Route path="/macros-chef" component={MacrosChef} />
-              <Route path="/mixology-maestro" component={MixologyMaestro} />
-              <Route path="/calorie-tracker" component={CalorieTracking} />
-              <Route path="/recipes" component={Recipes} />
-              <Route path="/pantry" component={Pantry} />
-              <Route path="/cookbook" component={Cookbook} />
-              <Route path="/profile" component={Profile} />
-              <Route path="/pricing" component={Pricing} />
+              <Route path="/onboarding" component={Onboarding} />
+              {/* Redirect to onboarding if user hasn't set a goal */}
+              {user && !user.goal ? (
+                <>
+                  <Route path="*" component={Onboarding} />
+                </>
+              ) : (
+                <>
+                  <Route path="/" component={Dashboard} />
+                  <Route path="/dashboard" component={Dashboard} />
+                  <Route path="/blog" component={Blog} />
+                  <Route path="/faq" component={FAQ} />
+                  <Route path="/pantry-chef" component={PantryChef} />
+                  <Route path="/meal-plan-chef" component={MealPlanChef} />
+                  <Route path="/master-chef" component={MasterChef} />
+                  <Route path="/macros-chef" component={MacrosChef} />
+                  <Route path="/mixology-maestro" component={MixologyMaestro} />
+                  <Route path="/calorie-tracker" component={CalorieTracking} />
+                  <Route path="/recipes" component={Recipes} />
+                  <Route path="/pantry" component={Pantry} />
+                  <Route path="/cookbook" component={Cookbook} />
+                  <Route path="/profile" component={Profile} />
+                  <Route path="/pricing" component={Pricing} />
+                </>
+              )}
             </>
           )}
           <Route component={NotFound} />

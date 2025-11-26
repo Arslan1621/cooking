@@ -66,11 +66,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Recipe routes
   app.post('/api/recipes/generate', isAuthenticated, async (req: any, res) => {
     try {
-      const params: RecipeGenerationParams = req.body;
+      const userId = getUserId(req);
+      const user = await storage.getUser(userId);
+      const params: RecipeGenerationParams = {
+        ...req.body,
+        userPreferences: {
+          goal: user?.goal,
+          dietaryRestrictions: user?.dietaryRestrictions || [],
+          activityLevel: user?.activityLevel,
+        },
+      };
       const generatedRecipe = await generateRecipe(params);
       
       // Save recipe to database
-      const userId = getUserId(req);
       const recipe = await storage.createRecipe({
         userId,
         title: generatedRecipe.title,
