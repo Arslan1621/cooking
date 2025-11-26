@@ -19,6 +19,7 @@ import Pricing from "@/pages/pricing";
 import Profile from "@/pages/Profile";
 import Recipes from "@/pages/Recipes";
 import Pantry from "@/pages/pantry";
+import Cookbook from "@/pages/cookbook";
 import NotFound from "@/pages/not-found";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 
@@ -56,7 +57,7 @@ function Router() {
               <Route path="/meal-plan-chef" component={MealPlanChef} />
               <Route path="/master-chef" component={MasterChef} />
               <Route path="/macros-chef" component={MacrosChef} />
-              <Route path="/mixology" component={MixologyMaestro} />
+              <Route path="/mixology-maestro" component={MixologyMaestro} />
             </>
           ) : (
             <>
@@ -66,10 +67,11 @@ function Router() {
               <Route path="/meal-plan-chef" component={MealPlanChef} />
               <Route path="/master-chef" component={MasterChef} />
               <Route path="/macros-chef" component={MacrosChef} />
-              <Route path="/mixology" component={MixologyMaestro} />
-              <Route path="/calories" component={CalorieTracking} />
+              <Route path="/mixology-maestro" component={MixologyMaestro} />
+              <Route path="/calorie-tracker" component={CalorieTracking} />
               <Route path="/recipes" component={Recipes} />
               <Route path="/pantry" component={Pantry} />
+              <Route path="/cookbook" component={Cookbook} />
               <Route path="/profile" component={Profile} />
               <Route path="/pricing" component={Pricing} />
             </>
