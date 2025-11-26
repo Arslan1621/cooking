@@ -38,7 +38,14 @@ export const users = pgTable("users", {
   weight: numeric("weight"), // in kg
   activityLevel: varchar("activity_level", { length: 20 }),
   goal: varchar("goal", { length: 20 }), // lose_weight, gain_muscle, eat_healthy, maintain_weight
+  cookingSkillLevel: varchar("cooking_skill_level", { length: 20 }), // beginner, intermediate, advanced, expert
+  allergies: text("allergies").array(),
   dietaryRestrictions: text("dietary_restrictions").array(),
+  goalAmount: numeric("goal_amount"), // amount to gain or lose in kg
+  goalTimeline: varchar("goal_timeline", { length: 50 }), // e.g., "3 months", "6 months"
+  muscleGainPerWeek: numeric("muscle_gain_per_week"), // in kg
+  dailyCalorieTarget: integer("daily_calorie_target"),
+  dailyMacros: jsonb("daily_macros"), // { protein, carbs, fat, fiber }
   subscriptionTier: varchar("subscription_tier", { length: 10 }).default("basic"),
   subscriptionExpiresAt: timestamp("subscription_expires_at"),
   createdAt: timestamp("created_at").defaultNow(),

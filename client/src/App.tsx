@@ -10,6 +10,7 @@ import { Toaster } from "@/components/ui/toaster";
 import Landing from "@/pages/landing";
 import Dashboard from "@/pages/dashboard";
 import Onboarding from "@/pages/onboarding";
+import CaloriePlan from "@/pages/calorie-plan";
 import PantryChef from "@/pages/pantry-chef";
 import MealPlanChef from "@/pages/meal-plan-chef";
 import MasterChef from "@/pages/master-chef";
@@ -67,6 +68,7 @@ function Router() {
           ) : (
             <>
               <Route path="/onboarding" component={Onboarding} />
+              <Route path="/calorie-plan" component={CaloriePlan} />
               {/* Redirect to onboarding if user hasn't set a goal */}
               {user && !user.goal ? (
                 <>
