@@ -11,6 +11,7 @@ import {
   NavigationMenuTrigger,
 } from "@/components/ui/navigation-menu";
 import { useAuth } from "@/hooks/useAuth";
+import { SignInButton, SignUpButton, UserButton } from "@clerk/clerk-react";
 import { 
   Utensils, 
   Menu, 
@@ -171,40 +172,22 @@ export default function Navbar() {
                 <div className="hidden md:flex items-center space-x-2">
                   <span className="text-gray-600">🇬🇧 EN</span>
                 </div>
-                <Button variant="ghost" onClick={() => window.location.href = "/api/login"}>
-                  Sign In
-                </Button>
-                <Button 
-                  className="bg-chef-orange hover:bg-chef-orange/90"
-                  onClick={() => window.location.href = "/api/login"}
-                >
-                  Sign Up
-                </Button>
+                <SignInButton mode="modal">
+                  <Button variant="ghost">Sign In</Button>
+                </SignInButton>
+                <SignUpButton mode="modal">
+                  <Button className="bg-chef-orange hover:bg-chef-orange/90">
+                    Sign Up
+                  </Button>
+                </SignUpButton>
               </>
             ) : (
               <>
                 <div className="hidden md:flex items-center space-x-4">
-                  {user?.profileImageUrl ? (
-                    <img 
-                      src={user.profileImageUrl} 
-                      alt="Profile" 
-                      className="w-8 h-8 rounded-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-8 h-8 bg-chef-orange rounded-full flex items-center justify-center">
-                      <User className="w-4 h-4 text-white" />
-                    </div>
-                  )}
+                  <UserButton afterSignOutUrl="/" />
                   <span className="text-sm font-medium text-gray-700">
                     {user?.firstName || 'Chef'}
                   </span>
-                  <Button 
-                    variant="ghost" 
-                    size="sm"
-                    onClick={() => window.location.href = "/api/logout"}
-                  >
-                    <LogOut className="w-4 h-4" />
-                  </Button>
                 </div>
               </>
             )}
@@ -249,13 +232,9 @@ export default function Navbar() {
                         </Link>
                       </div>
                       <hr />
-                      <Button 
-                        onClick={() => window.location.href = "/api/logout"}
-                        variant="outline"
-                        className="w-full"
-                      >
-                        Sign Out
-                      </Button>
+                      <div className="flex justify-center">
+                        <UserButton afterSignOutUrl="/" />
+                      </div>
                     </>
                   ) : (
                     <>
@@ -283,19 +262,16 @@ export default function Navbar() {
                       </div>
                       <hr />
                       <div className="space-y-2">
-                        <Button 
-                          variant="outline" 
-                          className="w-full"
-                          onClick={() => window.location.href = "/api/login"}
-                        >
-                          Sign In
-                        </Button>
-                        <Button 
-                          className="w-full bg-chef-orange hover:bg-chef-orange/90"
-                          onClick={() => window.location.href = "/api/login"}
-                        >
-                          Sign Up
-                        </Button>
+                        <SignInButton mode="modal">
+                          <Button variant="outline" className="w-full">
+                            Sign In
+                          </Button>
+                        </SignInButton>
+                        <SignUpButton mode="modal">
+                          <Button className="w-full bg-chef-orange hover:bg-chef-orange/90">
+                            Sign Up
+                          </Button>
+                        </SignUpButton>
                       </div>
                     </>
                   )}
