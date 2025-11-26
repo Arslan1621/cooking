@@ -11,8 +11,6 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Progress } from "@/components/ui/progress";
-import Navbar from "@/components/layout/navbar";
-import Footer from "@/components/layout/footer";
 import IngredientSelector from "@/components/ingredient-selector";
 import RecipeCard from "@/components/recipe-card";
 import { Target, Calculator, TrendingUp, Activity, Loader2 } from "lucide-react";
@@ -142,7 +140,6 @@ export default function MacrosChef() {
 
   return (
     <div className="min-h-screen bg-chef-gray">
-      <Navbar />
       
       <div className="pt-20 pb-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -492,7 +489,6 @@ export default function MacrosChef() {
         </div>
       </div>
 
-      <Footer />
     </div>
   );
 }

@@ -9,8 +9,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import Navbar from "@/components/layout/navbar";
-import Footer from "@/components/layout/footer";
 import IngredientSelector from "@/components/ingredient-selector";
 import ChefModeSelector from "@/components/chef-mode-selector";
 import RecipeCard from "@/components/recipe-card";
@@ -137,7 +135,6 @@ export default function PantryChef() {
 
   return (
     <div className="min-h-screen bg-chef-gray">
-      <Navbar />
       
       <div className="pt-20 pb-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -471,7 +468,6 @@ export default function PantryChef() {
         </div>
       </div>
 
-      <Footer />
     </div>
   );
 }

@@ -11,8 +11,6 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import Navbar from "@/components/layout/navbar";
-import Footer from "@/components/layout/footer";
 import IngredientSelector from "@/components/ingredient-selector";
 import RecipeCard from "@/components/recipe-card";
 import { ChefHat, Award, Clock, Users, Loader2 } from "lucide-react";
@@ -136,7 +134,6 @@ export default function MasterChef() {
 
   return (
     <div className="min-h-screen bg-white">
-      <Navbar />
       
       <div className="pt-20 pb-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -442,7 +439,6 @@ export default function MasterChef() {
         </div>
       </div>
 
-      <Footer />
     </div>
   );
 }

@@ -10,8 +10,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import Navbar from "@/components/layout/navbar";
-import Footer from "@/components/layout/footer";
 import MealPlanCard from "@/components/meal-plan-card";
 import { Calendar, Target, Activity, Clock, Loader2 } from "lucide-react";
 
@@ -157,7 +155,6 @@ export default function MealPlanChef() {
 
   return (
     <div className="min-h-screen bg-white">
-      <Navbar />
       
       <div className="pt-20 pb-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -504,7 +501,6 @@ export default function MealPlanChef() {
         </div>
       </div>
 
-      <Footer />
     </div>
   );
 }

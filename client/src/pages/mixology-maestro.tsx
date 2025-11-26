@@ -12,8 +12,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import Navbar from "@/components/layout/navbar";
-import Footer from "@/components/layout/footer";
 import RecipeCard from "@/components/recipe-card";
 import { Wine, Martini, Coffee, Clock, Loader2, Plus, X } from "lucide-react";
 
@@ -169,7 +167,6 @@ export default function MixologyMaestro() {
 
   return (
     <div className="min-h-screen bg-white">
-      <Navbar />
       
       <div className="pt-20 pb-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -593,7 +590,6 @@ export default function MixologyMaestro() {
         </div>
       </div>
 
-      <Footer />
     </div>
   );
 }

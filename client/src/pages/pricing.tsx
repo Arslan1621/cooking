@@ -2,8 +2,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import Navbar from "@/components/layout/navbar";
-import Footer from "@/components/layout/footer";
 import { Check, Star, Zap, Crown } from "lucide-react";
 
 const basicFeatures = [
@@ -43,8 +41,6 @@ const yearlyPricing = {
 export default function Pricing() {
   return (
     <div className="min-h-screen bg-white">
-      <Navbar />
-      
       <div className="pt-20 pb-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}
@@ -403,8 +399,6 @@ export default function Pricing() {
           </div>
         </div>
       </div>
-
-      <Footer />
     </div>
   );
 }
