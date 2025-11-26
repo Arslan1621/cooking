@@ -11,7 +11,8 @@ import {
   CreditCard,
   Users,
   Flame,
-  ChefHat
+  ChefHat,
+  Crown
 } from "lucide-react";
 
 export default function Landing() {
@@ -260,10 +261,13 @@ export default function Landing() {
             </p>
           </div>
 
-          <div className="grid lg:grid-cols-2 gap-8 max-w-4xl mx-auto">
+          <div className="grid lg:grid-cols-2 gap-8 max-w-4xl mx-auto items-start">
             {/* Basic Plan */}
-            <Card className="border-2">
-              <CardHeader>
+            <Card className="border-2 border-gray-200 relative flex flex-col pt-8">
+              <CardHeader className="text-center">
+                <div className="flex items-center justify-center w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full">
+                  <Star className="w-8 h-8 text-gray-600" />
+                </div>
                 <CardTitle className="text-2xl">Basic</CardTitle>
                 <CardDescription className="text-chef-orange font-semibold">
                   FREE FOREVER
@@ -271,21 +275,21 @@ export default function Landing() {
                 <p className="text-gray-600 text-sm">No Credit Card Required</p>
                 <div className="mt-4">
                   <span className="text-5xl font-bold text-gray-900">$0</span>
-                  <span className="text-gray-600">/Monthly</span>
+                  <span className="text-gray-600 ml-2">/Monthly</span>
                 </div>
               </CardHeader>
-              <CardContent>
-                <ul className="space-y-3 mb-8">
+              <CardContent className="flex-1 flex flex-col">
+                <ul className="space-y-3 mb-8 flex-1">
                   {basicFeatures.map((feature, index) => (
-                    <li key={index} className="flex items-center">
-                      <Check className="text-green-500 mr-3 h-4 w-4" />
-                      <span className="text-gray-700">{feature}</span>
+                    <li key={index} className="flex items-start">
+                      <Check className="text-green-500 mr-3 h-4 w-4 mt-0.5 flex-shrink-0" />
+                      <span className="text-gray-700 text-sm">{feature}</span>
                     </li>
                   ))}
                 </ul>
                 <Button 
                   variant="outline" 
-                  className="w-full"
+                  className="w-full hover:bg-chef-orange hover:text-white hover:border-chef-orange mt-auto"
                   onClick={() => window.location.href = "/dashboard"}
                 >
                   Get Started
@@ -294,31 +298,36 @@ export default function Landing() {
             </Card>
 
             {/* Pro Plan */}
-            <Card className="border-2 border-chef-orange relative">
+            <Card className="border-2 border-chef-orange relative flex flex-col">
               <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                <Badge className="bg-chef-orange text-white">3 DAYS TRIAL</Badge>
+                <Badge className="bg-chef-orange text-white px-4 py-1">
+                  3 DAYS FREE TRIAL
+                </Badge>
               </div>
-              <CardHeader>
+              <CardHeader className="text-center">
+                <div className="flex items-center justify-center w-16 h-16 mx-auto mb-4 bg-chef-orange/10 rounded-full">
+                  <Crown className="w-8 h-8 text-chef-orange" />
+                </div>
                 <CardTitle className="text-2xl">Pro</CardTitle>
                 <CardDescription>
                   For those who need a Digital Personal Chef
                 </CardDescription>
                 <div className="mt-4">
                   <span className="text-5xl font-bold text-gray-900">$12.99</span>
-                  <span className="text-gray-600">/Monthly</span>
+                  <span className="text-gray-600 ml-2">/Monthly</span>
                 </div>
               </CardHeader>
-              <CardContent>
-                <ul className="space-y-3 mb-8">
+              <CardContent className="flex-1 flex flex-col">
+                <ul className="space-y-3 mb-8 flex-1">
                   {proFeatures.map((feature, index) => (
-                    <li key={index} className="flex items-center">
-                      <Check className="text-green-500 mr-3 h-4 w-4" />
-                      <span className="text-gray-700">{feature}</span>
+                    <li key={index} className="flex items-start">
+                      <Check className="text-green-500 mr-3 h-4 w-4 mt-0.5 flex-shrink-0" />
+                      <span className="text-gray-700 text-sm">{feature}</span>
                     </li>
                   ))}
                 </ul>
                 <Button 
-                  className="w-full bg-chef-orange hover:bg-chef-orange/90"
+                  className="w-full bg-chef-orange hover:bg-chef-orange/90 mt-auto"
                   onClick={() => window.location.href = "/dashboard"}
                 >
                   Get Started
