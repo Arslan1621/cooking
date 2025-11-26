@@ -12,6 +12,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import Navbar from "@/components/layout/navbar";
+import Footer from "@/components/layout/footer";
 import { Package, Plus, Edit, Trash2, Calendar, Search, Filter, AlertTriangle } from "lucide-react";
 
 const categories = [
@@ -619,6 +621,8 @@ export default function Pantry() {
           </Dialog>
         </div>
       </div>
+
+      <Footer />
     </div>
   );
 }

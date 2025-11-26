@@ -1,6 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import Navbar from "@/components/layout/navbar";
+import Footer from "@/components/layout/footer";
 import { 
   Utensils, 
   Camera, 
@@ -16,7 +18,9 @@ import {
 
 export default function Landing() {
   return (
-    <div className="min-h-screen bg-white pt-20">
+    <div className="min-h-screen bg-white">
+      <Navbar />
+      
       {/* Hero Section */}
       <section className="pt-24 pb-16 bg-gradient-to-br from-chef-gray to-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

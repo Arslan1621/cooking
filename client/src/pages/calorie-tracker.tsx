@@ -12,6 +12,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import Navbar from "@/components/layout/navbar";
+import Footer from "@/components/layout/footer";
 import { Camera, Upload, Plus, TrendingUp, Target, Zap, Loader2, Calendar } from "lucide-react";
 
 const mealTypes = ["breakfast", "lunch", "dinner", "snack"];
@@ -585,6 +587,8 @@ export default function CalorieTracker() {
           </div>
         </div>
       </div>
+
+      <Footer />
     </div>
   );
 }
