@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { SignUpButton } from "@clerk/clerk-react";
 import { Check, Star, Zap, Crown } from "lucide-react";
 
 const basicFeatures = [
@@ -97,13 +98,14 @@ export default function Pricing() {
                           </li>
                         ))}
                       </ul>
-                      <Button 
-                        variant="outline" 
-                        className="w-full hover:bg-chef-orange hover:text-white hover:border-chef-orange mt-auto"
-                        onClick={() => window.location.href = "/api/login"}
-                      >
-                        Get Started
-                      </Button>
+                      <SignUpButton mode="modal">
+                        <Button 
+                          variant="outline" 
+                          className="w-full hover:bg-chef-orange hover:text-white hover:border-chef-orange mt-auto"
+                        >
+                          Get Started
+                        </Button>
+                      </SignUpButton>
                     </CardContent>
                   </Card>
 
@@ -136,12 +138,13 @@ export default function Pricing() {
                           </li>
                         ))}
                       </ul>
-                      <Button 
-                        className="w-full bg-chef-orange hover:bg-chef-orange/90 mt-auto"
-                        onClick={() => window.location.href = "/api/login"}
-                      >
-                        Start Free Trial
-                      </Button>
+                      <SignUpButton mode="modal">
+                        <Button 
+                          className="w-full bg-chef-orange hover:bg-chef-orange/90 mt-auto"
+                        >
+                          Start Free Trial
+                        </Button>
+                      </SignUpButton>
                     </CardContent>
                   </Card>
                 </div>
@@ -175,13 +178,14 @@ export default function Pricing() {
                           </li>
                         ))}
                       </ul>
-                      <Button 
-                        variant="outline" 
-                        className="w-full hover:bg-chef-orange hover:text-white hover:border-chef-orange mt-auto"
-                        onClick={() => window.location.href = "/api/login"}
-                      >
-                        Get Started
-                      </Button>
+                      <SignUpButton mode="modal">
+                        <Button 
+                          variant="outline" 
+                          className="w-full hover:bg-chef-orange hover:text-white hover:border-chef-orange mt-auto"
+                        >
+                          Get Started
+                        </Button>
+                      </SignUpButton>
                     </CardContent>
                   </Card>
 
@@ -220,12 +224,13 @@ export default function Pricing() {
                           </li>
                         ))}
                       </ul>
-                      <Button 
-                        className="w-full bg-chef-orange hover:bg-chef-orange/90 mt-auto"
-                        onClick={() => window.location.href = "/api/login"}
-                      >
-                        Start Free Trial
-                      </Button>
+                      <SignUpButton mode="modal">
+                        <Button 
+                          className="w-full bg-chef-orange hover:bg-chef-orange/90 mt-auto"
+                        >
+                          Start Free Trial
+                        </Button>
+                      </SignUpButton>
                     </CardContent>
                   </Card>
                 </div>

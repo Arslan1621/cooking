@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { SignUpButton } from "@clerk/clerk-react";
 import { 
   Utensils, 
   Camera, 
@@ -66,13 +67,14 @@ export default function Landing() {
               </div>
               
               <div className="flex flex-col gap-2">
-                <Button 
-                  size="lg" 
-                  className="bg-chef-orange hover:bg-chef-orange/90 w-fit"
-                  onClick={() => window.location.href = "/dashboard"}
-                >
-                  Get Started for free
-                </Button>
+                <SignUpButton mode="modal">
+                  <Button 
+                    size="lg" 
+                    className="bg-chef-orange hover:bg-chef-orange/90 w-fit"
+                  >
+                    Get Started for free
+                  </Button>
+                </SignUpButton>
                 <p className="text-gray-500 text-sm">No credit-card required</p>
               </div>
             </div>
@@ -287,13 +289,14 @@ export default function Landing() {
                     </li>
                   ))}
                 </ul>
-                <Button 
-                  variant="outline" 
-                  className="w-full hover:bg-chef-orange hover:text-white hover:border-chef-orange mt-auto"
-                  onClick={() => window.location.href = "/dashboard"}
-                >
-                  Get Started
-                </Button>
+                <SignUpButton mode="modal">
+                  <Button 
+                    variant="outline" 
+                    className="w-full hover:bg-chef-orange hover:text-white hover:border-chef-orange mt-auto"
+                  >
+                    Get Started
+                  </Button>
+                </SignUpButton>
               </CardContent>
             </Card>
 
@@ -326,12 +329,13 @@ export default function Landing() {
                     </li>
                   ))}
                 </ul>
-                <Button 
-                  className="w-full bg-chef-orange hover:bg-chef-orange/90 mt-auto"
-                  onClick={() => window.location.href = "/dashboard"}
-                >
-                  Get Started
-                </Button>
+                <SignUpButton mode="modal">
+                  <Button 
+                    className="w-full bg-chef-orange hover:bg-chef-orange/90 mt-auto"
+                  >
+                    Get Started
+                  </Button>
+                </SignUpButton>
               </CardContent>
             </Card>
           </div>
@@ -375,13 +379,14 @@ export default function Landing() {
             </Button>
           </div>
           
-          <Button 
-            size="lg" 
-            className="bg-chef-orange hover:bg-chef-orange/90"
-            onClick={() => window.location.href = "/dashboard"}
-          >
-            Get Started for free
-          </Button>
+          <SignUpButton mode="modal">
+            <Button 
+              size="lg" 
+              className="bg-chef-orange hover:bg-chef-orange/90"
+            >
+              Get Started for free
+            </Button>
+          </SignUpButton>
           <p className="text-gray-500 mt-2">No credit-card required</p>
         </div>
       </section>
