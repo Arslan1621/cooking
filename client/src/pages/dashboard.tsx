@@ -5,8 +5,6 @@ import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import Navbar from "@/components/layout/navbar";
-import Footer from "@/components/layout/footer";
 import { 
   ChefHat, 
   Calendar, 
@@ -47,8 +45,6 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Navbar />
-      
       <div className="pt-20 pb-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Welcome Header */}
@@ -304,8 +300,6 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
-
-      <Footer />
     </div>
   );
 }

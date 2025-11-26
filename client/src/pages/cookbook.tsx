@@ -9,8 +9,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import Navbar from "@/components/layout/navbar";
-import Footer from "@/components/layout/footer";
 import RecipeCard from "@/components/recipe-card";
 import MealPlanCard from "@/components/meal-plan-card";
 import { Search, Filter, BookOpen, Calendar, ChefHat, Heart, Clock, Users } from "lucide-react";
@@ -114,8 +112,6 @@ export default function Cookbook() {
 
   return (
     <div className="min-h-screen bg-chef-gray">
-      <Navbar />
-      
       <div className="pt-20 pb-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}
@@ -419,8 +415,6 @@ export default function Cookbook() {
           </Tabs>
         </div>
       </div>
-
-      <Footer />
     </div>
   );
 }
