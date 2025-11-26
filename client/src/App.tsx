@@ -20,6 +20,8 @@ import Profile from "@/pages/Profile";
 import Recipes from "@/pages/Recipes";
 import Pantry from "@/pages/pantry";
 import Cookbook from "@/pages/cookbook";
+import Blog from "@/pages/blog";
+import FAQ from "@/pages/faq";
 import NotFound from "@/pages/not-found";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 
@@ -53,6 +55,8 @@ function Router() {
             <>
               <Route path="/" component={Landing} />
               <Route path="/pricing" component={Pricing} />
+              <Route path="/blog" component={Blog} />
+              <Route path="/faq" component={FAQ} />
               <Route path="/pantry-chef" component={PantryChef} />
               <Route path="/meal-plan-chef" component={MealPlanChef} />
               <Route path="/master-chef" component={MasterChef} />
@@ -63,6 +67,8 @@ function Router() {
             <>
               <Route path="/" component={Dashboard} />
               <Route path="/dashboard" component={Dashboard} />
+              <Route path="/blog" component={Blog} />
+              <Route path="/faq" component={FAQ} />
               <Route path="/pantry-chef" component={PantryChef} />
               <Route path="/meal-plan-chef" component={MealPlanChef} />
               <Route path="/master-chef" component={MasterChef} />
