@@ -6,33 +6,49 @@ import { useQuery } from "@tanstack/react-query";
 import { getQueryFn } from "@/lib/queryClient";
 import { type User } from "@shared/schema";
 import { Flame, Beef, Wheat, Droplet } from "lucide-react";
+import { LoadingSpinner } from "@/components/LoadingSpinner";
 
 export default function CaloriePlan() {
   const [, navigate] = useLocation();
   const { user } = useAuth();
 
-  const { data: currentUser } = useQuery<User>({
+  const { data: currentUser, isLoading } = useQuery<User>({
     queryKey: ["/api/auth/user"],
     queryFn: getQueryFn({ on401: "returnNull" }),
+    staleTime: 0,
+    gcTime: 0,
   });
 
-  if (!currentUser?.dailyCalorieTarget) {
+  if (isLoading || !currentUser) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <p className="text-gray-600">Loading your plan...</p>
+        <div className="text-center">
+          <LoadingSpinner size="lg" className="mx-auto mb-4" />
+          <p className="text-gray-600">Loading your plan...</p>
+        </div>
       </div>
     );
   }
 
-  const macros = currentUser.dailyMacros as any || {
+  if (!currentUser.dailyCalorieTarget) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-gray-600">Error loading plan. Please try again.</p>
+      </div>
+    );
+  }
+
+  const macros = (currentUser.dailyMacros as any) || {
     protein: 0,
     carbs: 0,
     fat: 0,
     fiber: 0,
   };
 
+  const calorieTarget = parseInt(String(currentUser.dailyCalorieTarget)) || 0;
+
   const calorieData = [
-    { label: "Calories", value: currentUser.dailyCalorieTarget, icon: Flame, color: "bg-orange-100", textColor: "text-orange-600" },
+    { label: "Calories", value: calorieTarget, icon: Flame, color: "bg-orange-100", textColor: "text-orange-600" },
     { label: "Protein", value: `${macros.protein}g`, icon: Beef, color: "bg-red-100", textColor: "text-red-600" },
     { label: "Carbs", value: `${macros.carbs}g`, icon: Wheat, color: "bg-yellow-100", textColor: "text-yellow-600" },
     { label: "Fats", value: `${macros.fat}g`, icon: Droplet, color: "bg-blue-100", textColor: "text-blue-600" },

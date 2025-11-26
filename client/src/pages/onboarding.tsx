@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
+import { queryClient } from "@/lib/queryClient";
 import { z } from "zod";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 
@@ -163,12 +164,18 @@ export default function Onboarding() {
 
       if (!response.ok) throw new Error("Failed to save profile");
 
+      // Invalidate user cache to force fresh fetch
+      await queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+
       toast({
         title: "Profile Created!",
         description: "Your personalized plan is ready.",
       });
 
-      navigate("/calorie-plan", { replace: true });
+      // Small delay to ensure cache is invalidated
+      setTimeout(() => {
+        navigate("/calorie-plan", { replace: true });
+      }, 500);
     } catch (error) {
       toast({
         title: "Error",
