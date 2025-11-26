@@ -71,9 +71,9 @@ export default function Pricing() {
 
               {/* Monthly Pricing */}
               <TabsContent value="monthly" className="mt-8">
-                <div className="grid lg:grid-cols-2 gap-8 max-w-4xl mx-auto">
+                <div className="grid lg:grid-cols-2 gap-8 max-w-4xl mx-auto items-start">
                   {/* Basic Plan */}
-                  <Card className="border-2 border-gray-200 relative h-full flex flex-col">
+                  <Card className="border-2 border-gray-200 relative flex flex-col">
                     <CardHeader className="text-center">
                       <div className="flex items-center justify-center w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full">
                         <Star className="w-8 h-8 text-gray-600" />
@@ -108,7 +108,7 @@ export default function Pricing() {
                   </Card>
 
                   {/* Pro Plan */}
-                  <Card className="border-2 border-chef-orange relative h-full flex flex-col pt-6">
+                  <Card className="border-2 border-chef-orange relative flex flex-col">
                     <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
                       <Badge className="bg-chef-orange text-white px-4 py-1">
                         3 DAYS FREE TRIAL
@@ -149,9 +149,9 @@ export default function Pricing() {
 
               {/* Yearly Pricing */}
               <TabsContent value="yearly" className="mt-8">
-                <div className="grid lg:grid-cols-2 gap-8 max-w-4xl mx-auto">
+                <div className="grid lg:grid-cols-2 gap-8 max-w-4xl mx-auto items-start">
                   {/* Basic Plan */}
-                  <Card className="border-2 border-gray-200 relative h-full flex flex-col">
+                  <Card className="border-2 border-gray-200 relative flex flex-col">
                     <CardHeader className="text-center">
                       <div className="flex items-center justify-center w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full">
                         <Star className="w-8 h-8 text-gray-600" />
@@ -186,7 +186,7 @@ export default function Pricing() {
                   </Card>
 
                   {/* Pro Plan */}
-                  <Card className="border-2 border-chef-orange relative h-full flex flex-col pt-6">
+                  <Card className="border-2 border-chef-orange relative flex flex-col">
                     <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
                       <Badge className="bg-green-500 text-white px-4 py-1">
                         {yearlyPricing.pro.savings}
