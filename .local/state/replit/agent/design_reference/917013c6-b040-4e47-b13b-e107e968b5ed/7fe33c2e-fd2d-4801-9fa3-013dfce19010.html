@@ -1,0 +1,881 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChefGPT - Cook Anything. Track Everything. Achieve Any Goal.</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'chef-orange': '#F97316',
+                        'chef-red': '#EF4444',
+                        'chef-gray': '#F8FAFC'
+                    },
+                    fontFamily: {
+                        'sans': ['Inter', 'system-ui', 'sans-serif']
+                    }
+                }
+            }
+        };
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="font-sans bg-white">
+    
+    <!-- @COMPONENT: Navigation -->
+    <nav class="fixed top-0 left-0 right-0 bg-white/95 backdrop-blur-sm border-b border-gray-100 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center space-x-8">
+                    <div class="flex items-center space-x-2">
+                        <!-- ChefGPT logo placeholder -->
+                        <div class="w-8 h-8 bg-chef-orange rounded-lg flex items-center justify-center">
+                            <i class="fas fa-utensils text-white text-sm"></i>
+                        </div>
+                        <span class="text-xl font-bold text-gray-900">ChefGPT</span>
+                    </div>
+                    
+                    <div class="hidden md:flex items-center space-x-6">
+                        <div class="relative group">
+                            <button class="text-gray-700 hover:text-chef-orange font-medium flex items-center space-x-1">
+                                <span>Features</span>
+                                <i class="fas fa-chevron-down text-xs"></i>
+                            </button>
+                            <!-- Features dropdown would be here -->
+                        </div>
+                        <a href="#pricing" class="text-gray-700 hover:text-chef-orange font-medium">Pricing</a>
+                        <a href="#blog" class="text-gray-700 hover:text-chef-orange font-medium">Blog</a>
+                        <a href="#faq" class="text-gray-700 hover:text-chef-orange font-medium">FAQ</a>
+                        <a href="#store" class="text-gray-700 hover:text-chef-orange font-medium flex items-center space-x-1">
+                            <span>ChefGPT Store</span>
+                            <span class="bg-chef-orange text-white text-xs px-2 py-1 rounded-full">New</span>
+                        </a>
+                        <a href="#gift-cards" class="text-gray-700 hover:text-chef-orange font-medium flex items-center space-x-1">
+                            <span>Gift Cards</span>
+                            <span class="bg-chef-orange text-white text-xs px-2 py-1 rounded-full">New</span>
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="flex items-center space-x-4">
+                    <div class="hidden md:flex items-center space-x-2">
+                        <span class="text-gray-600">🇬🇧 EN</span>
+                    </div>
+                    <button class="text-gray-700 hover:text-chef-orange font-medium">Sign In</button>
+                    <button class="bg-chef-orange text-white px-4 py-2 rounded-lg font-medium hover:bg-orange-600 transition-colors">
+                        Sign Up
+                    </button>
+                    <button class="md:hidden">
+                        <i class="fas fa-bars text-gray-700"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+    <!-- @END_COMPONENT: Navigation -->
+
+    <!-- @COMPONENT: Hero Section -->
+    <section class="pt-24 pb-16 bg-gradient-to-br from-chef-gray to-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid lg:grid-cols-2 gap-12 items-center">
+                <div class="lg:pr-8">
+                    <div class="mb-6">
+                        <span class="inline-block bg-chef-orange/10 text-chef-orange px-4 py-2 rounded-full text-sm font-medium mb-4">
+                            Meet ChefGPT 👋
+                        </span>
+                        <h1 class="text-5xl lg:text-6xl font-bold text-gray-900 leading-tight mb-6">
+                            Cook Anything.<br>
+                            Track Everything.<br>
+                            Achieve Any Goal.
+                        </h1>
+                        <p class="text-xl text-gray-600 mb-8 leading-relaxed">
+                            Achieve your health goals faster with ChefGPT. AI-powered recipes and calorie tracking help you stay on track and see results—up to 4x quicker. <strong>1,000,000+ dinners saved so far.</strong>
+                        </p>
+                    </div>
+                    
+                    <div class="flex flex-col sm:flex-row gap-4 mb-8">
+                        <!-- App Store button placeholder -->
+                        <a href="#" class="inline-flex items-center justify-center bg-black text-white px-6 py-3 rounded-lg hover:bg-gray-800 transition-colors">
+                            <i class="fab fa-apple mr-2"></i>
+                            Download on the App Store
+                        </a>
+                        <!-- Google Play button placeholder -->
+                        <a href="#" class="inline-flex items-center justify-center bg-black text-white px-6 py-3 rounded-lg hover:bg-gray-800 transition-colors">
+                            <i class="fab fa-google-play mr-2"></i>
+                            Get it on Google Play
+                        </a>
+                    </div>
+                    
+                    <button class="bg-chef-orange text-white px-8 py-4 rounded-lg text-lg font-semibold hover:bg-orange-600 transition-colors">
+                        Get Started for free
+                    </button>
+                    <p class="text-gray-500 mt-2">No credit-card required</p>
+                </div>
+                
+                <div class="relative">
+                    <!-- Professional food photography showcasing the ChefGPT mobile app interface -->
+                    <img src="https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&h=600" alt="ChefGPT mobile app interface" class="rounded-2xl shadow-2xl w-full" />
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- @END_COMPONENT: Hero Section -->
+
+    <!-- @COMPONENT: Features Overview -->
+    <section id="features" class="py-20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <div class="flex items-center justify-center mb-4">
+                    <i class="fas fa-fire text-chef-orange text-2xl mr-2"></i>
+                    <span class="text-chef-orange font-semibold uppercase tracking-wide">Features</span>
+                </div>
+                <h2 class="text-4xl lg:text-5xl font-bold text-gray-900 mb-6">
+                    Built to help you achieve your Goals.
+                </h2>
+                <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                    Whether you're tracking macros or just trying to eat better, ChefGPT brings structure to your plate, with the power of AI.
+                </p>
+            </div>
+
+            <!-- Feature 1: Calorie Tracking -->
+            <div class="grid lg:grid-cols-2 gap-16 items-center mb-24">
+                <div>
+                    <div class="flex items-center mb-6">
+                        <i class="fas fa-camera text-chef-orange text-2xl mr-3"></i>
+                        <h3 class="text-3xl font-bold text-gray-900">Track Calories in a Snap</h3>
+                    </div>
+                    <p class="text-lg text-gray-600 leading-relaxed">
+                        Just snap a photo of your meal—ChefGPT's AI instantly detects ingredients, estimates nutrition, and logs everything for you. No more manual input. Just eat, shoot, and stay on track.
+                    </p>
+                </div>
+                <div class="relative">
+                    <!-- AI calorie tracking interface showing photo analysis -->
+                    <img src="https://images.unsplash.com/photo-1512621776951-a57141f2eefd?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&h=600" alt="AI food photo analysis interface" class="rounded-2xl shadow-lg" />
+                </div>
+            </div>
+
+            <!-- Feature 2: Recipe Generation -->
+            <div class="grid lg:grid-cols-2 gap-16 items-center mb-24">
+                <div class="lg:order-2">
+                    <div class="flex items-center mb-6">
+                        <i class="fas fa-magic text-chef-orange text-2xl mr-3"></i>
+                        <h3 class="text-3xl font-bold text-gray-900">Get Recipes in One Tap</h3>
+                    </div>
+                    <p class="text-lg text-gray-600 leading-relaxed mb-8">
+                        Open ChefGPT, list your ingredients or search any dish, and let our AI do the rest. No endless scrolling—just quick, personalized recipes you'll actually want to cook.
+                    </p>
+                    <div class="flex flex-wrap gap-3">
+                        <button class="bg-chef-orange text-white px-4 py-2 rounded-lg font-medium hover:bg-orange-600 transition-colors">
+                            Discover PantryChef
+                        </button>
+                        <button class="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg font-medium hover:bg-gray-200 transition-colors">
+                            Discover MasterChef
+                        </button>
+                        <button class="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg font-medium hover:bg-gray-200 transition-colors">
+                            Discover MacrosChef
+                        </button>
+                        <button class="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg font-medium hover:bg-gray-200 transition-colors">
+                            Discover MixologyMaestro
+                        </button>
+                    </div>
+                </div>
+                <div class="lg:order-1 relative">
+                    <!-- Recipe generation interface showing ingredient input -->
+                    <img src="https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&h=600" alt="Recipe generation interface" class="rounded-2xl shadow-lg" />
+                </div>
+            </div>
+
+            <!-- Feature 3: Meal Planning -->
+            <div class="grid lg:grid-cols-2 gap-16 items-center mb-24">
+                <div>
+                    <div class="flex items-center mb-6">
+                        <i class="fas fa-calendar-alt text-chef-orange text-2xl mr-3"></i>
+                        <h3 class="text-3xl font-bold text-gray-900">Smart Meal Plans, Made Instantly</h3>
+                    </div>
+                    <p class="text-lg text-gray-600 leading-relaxed mb-8">
+                        ChefGPT builds your entire week's meals based on your preferences, goals, and dietary needs—no spreadsheets or guesswork required. You'll even get a ready-to-go shopping list, so you can spend less time planning and more time living.
+                    </p>
+                    <button class="bg-chef-orange text-white px-6 py-3 rounded-lg font-medium hover:bg-orange-600 transition-colors">
+                        Discover MealPlanChef
+                    </button>
+                </div>
+                <div class="relative">
+                    <!-- Weekly meal planning calendar interface -->
+                    <img src="https://images.unsplash.com/photo-1484659619207-9165d119dafe?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&h=600" alt="Weekly meal planning interface" class="rounded-2xl shadow-lg" />
+                </div>
+            </div>
+
+            <!-- Feature 4: Pantry Tracking -->
+            <div class="grid lg:grid-cols-2 gap-16 items-center">
+                <div class="lg:order-2">
+                    <div class="flex items-center mb-6">
+                        <i class="fas fa-boxes text-chef-orange text-2xl mr-3"></i>
+                        <h3 class="text-3xl font-bold text-gray-900">Real-Time Pantry Tracking</h3>
+                    </div>
+                    <p class="text-lg text-gray-600 leading-relaxed">
+                        Add ingredients as you shop or cook, and ChefGPT keeps your pantry organized. It learns what you have and suggests recipes to help you use it all—before anything goes to waste.
+                    </p>
+                </div>
+                <div class="lg:order-1 relative">
+                    <!-- Pantry inventory management interface -->
+                    <img src="https://pixabay.com/get/g6417c7a2993e714db488f529564a2787a1d3de302371341c61d511814720665d75e3a7aaddc7352f54d4b9bace189daf7a86b5e91c36e102212668998c75c10e_1280.jpg" alt="Pantry tracking interface" class="rounded-2xl shadow-lg" />
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- @END_COMPONENT: Features Overview -->
+
+    <!-- @COMPONENT: PantryChef Feature Detail -->
+    <section id="pantry-chef" class="py-20 bg-chef-gray">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl lg:text-5xl font-bold text-gray-900 mb-6">
+                    🥫 PantryChef
+                </h2>
+                <h3 class="text-3xl font-bold text-gray-900 mb-4">
+                    Where Ingredients Turn into Masterpieces!
+                </h3>
+                <p class="text-xl text-gray-600 max-w-4xl mx-auto">
+                    Have a stocked pantry but no recipe inspiration? PantryChef is the kitchen genie that transforms your basic ingredients into gourmet delights. No more dinner dilemmas, just delectable dishes!
+                </p>
+            </div>
+
+            <!-- Step-by-step process -->
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                <!-- Step 1 -->
+                <div class="bg-white rounded-2xl p-6 shadow-lg">
+                    <div class="flex items-center justify-center w-12 h-12 bg-chef-orange text-white rounded-xl font-bold text-lg mb-4">1</div>
+                    <h4 class="text-xl font-bold text-gray-900 mb-3">Add the ingredients you have at home</h4>
+                    <p class="text-gray-600 mb-4">You can pick ingredients from the list or from your saved inventory.</p>
+                    
+                    <div class="space-y-2">
+                        <div class="flex flex-wrap gap-2">
+                            <span class="bg-chef-orange/10 text-chef-orange px-3 py-1 rounded-full text-sm">Cheese</span>
+                            <span class="bg-chef-orange/10 text-chef-orange px-3 py-1 rounded-full text-sm">Bread</span>
+                            <span class="bg-chef-orange/10 text-chef-orange px-3 py-1 rounded-full text-sm">Avocado</span>
+                        </div>
+                        <div class="flex flex-wrap gap-2">
+                            <span class="bg-chef-orange/10 text-chef-orange px-3 py-1 rounded-full text-sm">Carrot</span>
+                            <span class="bg-chef-orange/10 text-chef-orange px-3 py-1 rounded-full text-sm">Butter</span>
+                            <span class="bg-chef-orange/10 text-chef-orange px-3 py-1 rounded-full text-sm">Pepper</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 2 -->
+                <div class="bg-white rounded-2xl p-6 shadow-lg">
+                    <div class="flex items-center justify-center w-12 h-12 bg-chef-orange text-white rounded-xl font-bold text-lg mb-4">2</div>
+                    <h4 class="text-xl font-bold text-gray-900 mb-3">Select what meal you want to cook</h4>
+                    <p class="text-gray-600 mb-4">You can select Breakfast, Lunch, Snack or Dinner.</p>
+                    
+                    <div class="grid grid-cols-2 gap-2">
+                        <button class="bg-gray-100 text-gray-700 px-3 py-2 rounded-lg text-sm">Breakfast</button>
+                        <button class="bg-chef-orange text-white px-3 py-2 rounded-lg text-sm font-medium">Lunch</button>
+                        <button class="bg-gray-100 text-gray-700 px-3 py-2 rounded-lg text-sm">Snack</button>
+                        <button class="bg-gray-100 text-gray-700 px-3 py-2 rounded-lg text-sm">Dinner</button>
+                    </div>
+                </div>
+
+                <!-- Step 3 -->
+                <div class="bg-white rounded-2xl p-6 shadow-lg">
+                    <div class="flex items-center justify-center w-12 h-12 bg-chef-orange text-white rounded-xl font-bold text-lg mb-4">3</div>
+                    <h4 class="text-xl font-bold text-gray-900 mb-3">Select kitchen utensils</h4>
+                    <p class="text-gray-600 mb-4">Pick the kitchen utensils you have or want to use.</p>
+                    
+                    <div class="grid grid-cols-2 gap-2 text-sm">
+                        <button class="bg-chef-orange text-white px-2 py-1 rounded">Stove Top</button>
+                        <button class="bg-gray-100 text-gray-700 px-2 py-1 rounded">Oven</button>
+                        <button class="bg-gray-100 text-gray-700 px-2 py-1 rounded">Microwave</button>
+                        <button class="bg-gray-100 text-gray-700 px-2 py-1 rounded">Air Fryer</button>
+                    </div>
+                </div>
+
+                <!-- Step 4 -->
+                <div class="bg-white rounded-2xl p-6 shadow-lg">
+                    <div class="flex items-center justify-center w-12 h-12 bg-chef-orange text-white rounded-xl font-bold text-lg mb-4">4</div>
+                    <h4 class="text-xl font-bold text-gray-900 mb-3">Select cooking time</h4>
+                    <p class="text-gray-600 mb-4">Select 5 minutes if you are in a rush or longer if you have time.</p>
+                    
+                    <div class="space-y-2">
+                        <button class="w-full bg-chef-orange text-white px-4 py-2 rounded-lg font-medium">
+                            ⏲️ 5 minutes
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Step 5 -->
+                <div class="bg-white rounded-2xl p-6 shadow-lg">
+                    <div class="flex items-center justify-center w-12 h-12 bg-chef-orange text-white rounded-xl font-bold text-lg mb-4">5</div>
+                    <h4 class="text-xl font-bold text-gray-900 mb-3">Select skill level</h4>
+                    <p class="text-gray-600 mb-4">It doesn't matter if you are a Novice or a Michelin Starred Chef.</p>
+                    
+                    <div class="space-y-2">
+                        <button class="w-full bg-chef-orange text-white px-4 py-2 rounded-lg font-medium">
+                            Novice
+                        </button>
+                        <button class="w-full bg-gray-100 text-gray-700 px-4 py-2 rounded-lg">
+                            Expert
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Step 6 -->
+                <div class="bg-white rounded-2xl p-6 shadow-lg">
+                    <div class="flex items-center justify-center w-12 h-12 bg-chef-orange text-white rounded-xl font-bold text-lg mb-4">6</div>
+                    <h4 class="text-xl font-bold text-gray-900 mb-3">Select Chef Mode</h4>
+                    <p class="text-gray-600 mb-4">PantryChef offers two modes: All-In and Gourmet.</p>
+                    
+                    <div class="space-y-2">
+                        <button class="w-full bg-chef-orange text-white px-4 py-2 rounded-lg font-medium text-sm">
+                            Gourmet Mode
+                        </button>
+                        <button class="w-full bg-gray-100 text-gray-700 px-4 py-2 rounded-lg text-sm">
+                            All-In Mode
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Step 7 -->
+                <div class="bg-white rounded-2xl p-6 shadow-lg">
+                    <div class="flex items-center justify-center w-12 h-12 bg-chef-orange text-white rounded-xl font-bold text-lg mb-4">7</div>
+                    <h4 class="text-xl font-bold text-gray-900 mb-3">Generate your Recipe</h4>
+                    <p class="text-gray-600 mb-4">Press the Generate button and wait for the magic to happen.</p>
+                    
+                    <button class="w-full bg-chef-orange text-white px-4 py-3 rounded-lg font-bold">
+                        Generate your Recipe 🧑‍🍳
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- @END_COMPONENT: PantryChef Feature Detail -->
+
+    <!-- @COMPONENT: MealPlanChef Feature Detail -->
+    <section id="meal-plan-chef" class="py-20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl lg:text-5xl font-bold text-gray-900 mb-6">
+                    📆 MealPlanChef
+                </h2>
+                <h3 class="text-3xl font-bold text-gray-900 mb-4">
+                    Your AI Powered Nutritionist
+                </h3>
+                <p class="text-xl text-gray-600 max-w-4xl mx-auto">
+                    Vegan? Paleo? Keto? Trying to build muscle? Trying to eat healthier? No problem. Let MealPlanChef do the heavy lifting. MealPlanChef generates meal plans for your week to help you achieve your goal or diet plan.
+                </p>
+            </div>
+
+            <!-- MealPlan steps -->
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Personal Info Step -->
+                <div class="bg-chef-gray rounded-2xl p-6">
+                    <div class="flex items-center justify-center w-12 h-12 bg-chef-orange text-white rounded-xl font-bold text-lg mb-4">1</div>
+                    <h4 class="text-xl font-bold text-gray-900 mb-3">Make your Meal Plan personal</h4>
+                    <p class="text-gray-600 mb-4">Each Meal Plan is personalized on your Gender, Age and Body Measurements.</p>
+                    
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Gender</label>
+                            <div class="grid grid-cols-2 gap-2">
+                                <button class="bg-chef-orange text-white px-3 py-2 rounded-lg text-sm font-medium">Male</button>
+                                <button class="bg-gray-200 text-gray-700 px-3 py-2 rounded-lg text-sm">Female</button>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Height (cm)</label>
+                                <input type="number" placeholder="175" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Weight (kg)</label>
+                                <input type="number" placeholder="70" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Age (years)</label>
+                            <input type="number" placeholder="30" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Goal Selection -->
+                <div class="bg-chef-gray rounded-2xl p-6">
+                    <div class="flex items-center justify-center w-12 h-12 bg-chef-orange text-white rounded-xl font-bold text-lg mb-4">2</div>
+                    <h4 class="text-xl font-bold text-gray-900 mb-3">Select Your Goal</h4>
+                    <p class="text-gray-600 mb-4">You can select Eat Healthy, Gain Muscles, or Lose Weight.</p>
+                    
+                    <div class="space-y-2">
+                        <button class="w-full bg-gray-200 text-gray-700 px-4 py-2 rounded-lg">Eat Healthy</button>
+                        <button class="w-full bg-chef-orange text-white px-4 py-2 rounded-lg font-medium">Lose Weight</button>
+                        <button class="w-full bg-gray-200 text-gray-700 px-4 py-2 rounded-lg">Gain Muscle</button>
+                    </div>
+                </div>
+
+                <!-- Activity Level -->
+                <div class="bg-chef-gray rounded-2xl p-6">
+                    <div class="flex items-center justify-center w-12 h-12 bg-chef-orange text-white rounded-xl font-bold text-lg mb-4">3</div>
+                    <h4 class="text-xl font-bold text-gray-900 mb-3">Select Activity Level</h4>
+                    <p class="text-gray-600 mb-4">Pick the option that is most suitable to your current lifestyle.</p>
+                    
+                    <div class="space-y-2">
+                        <button class="w-full bg-chef-orange text-white px-4 py-2 rounded-lg font-medium">Sedentary</button>
+                        <button class="w-full bg-gray-200 text-gray-700 px-4 py-2 rounded-lg">Lightly Active</button>
+                        <button class="w-full bg-gray-200 text-gray-700 px-4 py-2 rounded-lg">Very Active</button>
+                    </div>
+                </div>
+
+                <!-- Dietary Requirements -->
+                <div class="bg-chef-gray rounded-2xl p-6">
+                    <div class="flex items-center justify-center w-12 h-12 bg-chef-orange text-white rounded-xl font-bold text-lg mb-4">4</div>
+                    <h4 class="text-xl font-bold text-gray-900 mb-3">Dietary Requirements</h4>
+                    <p class="text-gray-600 mb-4">Select your dietary preferences and restrictions.</p>
+                    
+                    <div class="grid grid-cols-2 gap-2 text-sm">
+                        <button class="bg-gray-200 text-gray-700 px-3 py-2 rounded-lg">Vegetarian</button>
+                        <button class="bg-gray-200 text-gray-700 px-3 py-2 rounded-lg">Vegan</button>
+                        <button class="bg-chef-orange text-white px-3 py-2 rounded-lg font-medium">Paleo</button>
+                        <button class="bg-gray-200 text-gray-700 px-3 py-2 rounded-lg">Keto</button>
+                        <button class="bg-gray-200 text-gray-700 px-3 py-2 rounded-lg">Gluten-Free</button>
+                        <button class="bg-gray-200 text-gray-700 px-3 py-2 rounded-lg">Dairy-Free</button>
+                    </div>
+                </div>
+
+                <!-- Duration -->
+                <div class="bg-chef-gray rounded-2xl p-6">
+                    <div class="flex items-center justify-center w-12 h-12 bg-chef-orange text-white rounded-xl font-bold text-lg mb-4">5</div>
+                    <h4 class="text-xl font-bold text-gray-900 mb-3">Plan Duration</h4>
+                    <p class="text-gray-600 mb-4">Do you need a quick detox weekend or a full week plan?</p>
+                    
+                    <div class="space-y-2">
+                        <button class="w-full bg-gray-200 text-gray-700 px-4 py-2 rounded-lg">3 Days</button>
+                        <button class="w-full bg-chef-orange text-white px-4 py-2 rounded-lg font-medium">📆 7 Days</button>
+                        <button class="w-full bg-gray-200 text-gray-700 px-4 py-2 rounded-lg">14 Days</button>
+                    </div>
+                </div>
+
+                <!-- Generate -->
+                <div class="bg-chef-gray rounded-2xl p-6">
+                    <div class="flex items-center justify-center w-12 h-12 bg-chef-orange text-white rounded-xl font-bold text-lg mb-4">6</div>
+                    <h4 class="text-xl font-bold text-gray-900 mb-3">Generate Meal Plan</h4>
+                    <p class="text-gray-600 mb-4">Press the Generate button and wait for the magic to happen.</p>
+                    
+                    <button class="w-full bg-chef-orange text-white px-4 py-3 rounded-lg font-bold">
+                        Generate your Meal Plan 📅
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- @END_COMPONENT: MealPlanChef Feature Detail -->
+
+    <!-- @COMPONENT: Testimonials -->
+    <section id="testimonials" class="py-20 bg-chef-gray">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <div class="flex items-center justify-center mb-4">
+                    <i class="fas fa-users text-chef-orange text-2xl mr-2"></i>
+                    <span class="text-chef-orange font-semibold uppercase tracking-wide">Testimonials</span>
+                </div>
+                <h2 class="text-4xl lg:text-5xl font-bold text-gray-900 mb-6">
+                    Loved by more than 1 Million Home Cooks
+                </h2>
+                <p class="text-xl text-gray-600">Hear directly from our customers.</p>
+            </div>
+
+            <!-- Testimonials Grid -->
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- @MAP: testimonials.map(testimonial => ( -->
+                <div class="bg-white rounded-2xl p-6 shadow-lg">
+                    <div class="flex items-center mb-4">
+                        <!-- User avatar representing Zaky M. -->
+                        <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=100&h=100" alt="Zaky M. avatar" class="w-12 h-12 rounded-full mr-3" />
+                        <div>
+                            <p class="font-semibold text-gray-900">Zaky M.</p>
+                        </div>
+                    </div>
+                    <blockquote class="text-gray-600 italic">
+                        "No more wasting time in the kitchen."
+                    </blockquote>
+                </div>
+
+                <div class="bg-white rounded-2xl p-6 shadow-lg">
+                    <div class="flex items-center mb-4">
+                        <!-- User avatar representing Gideon S.W. -->
+                        <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=100&h=100" alt="Gideon S.W. avatar" class="w-12 h-12 rounded-full mr-3" />
+                        <div>
+                            <p class="font-semibold text-gray-900">Gideon S.W.</p>
+                        </div>
+                    </div>
+                    <blockquote class="text-gray-600 italic">
+                        "My wife and sister in law loveeeee ChefGPT!"
+                    </blockquote>
+                </div>
+
+                <div class="bg-white rounded-2xl p-6 shadow-lg">
+                    <div class="flex items-center mb-4">
+                        <!-- User avatar representing Joe D. -->
+                        <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=100&h=100" alt="Joe D. avatar" class="w-12 h-12 rounded-full mr-3" />
+                        <div>
+                            <p class="font-semibold text-gray-900">Joe D.</p>
+                        </div>
+                    </div>
+                    <blockquote class="text-gray-600 italic">
+                        "Now this is a good use of AI!"
+                    </blockquote>
+                </div>
+
+                <div class="bg-white rounded-2xl p-6 shadow-lg">
+                    <div class="flex items-center mb-4">
+                        <!-- User avatar representing Mia T. -->
+                        <img src="https://pixabay.com/get/g9c861310258b7137b3cf0fe38f8384ce0fc6984f9c44862e4fa27f5844dba0e3d1f7095623e14fcd239872a3de365704ba61fcd4343b4608a9c83ec0d8f5e033_1280.jpg" alt="Mia T. avatar" class="w-12 h-12 rounded-full mr-3" />
+                        <div>
+                            <p class="font-semibold text-gray-900">Mia T.</p>
+                        </div>
+                    </div>
+                    <blockquote class="text-gray-600 italic">
+                        "ChefGPT has revolutionized how we do meal prep at home!"
+                    </blockquote>
+                </div>
+
+                <div class="bg-white rounded-2xl p-6 shadow-lg">
+                    <div class="flex items-center mb-4">
+                        <!-- User avatar representing Ethan K. -->
+                        <img src="https://images.unsplash.com/photo-1519244703995-f4e0f30006d5?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=100&h=100" alt="Ethan K. avatar" class="w-12 h-12 rounded-full mr-3" />
+                        <div>
+                            <p class="font-semibold text-gray-900">Ethan K.</p>
+                        </div>
+                    </div>
+                    <blockquote class="text-gray-600 italic">
+                        "Incredible! I've discovered so many new recipes."
+                    </blockquote>
+                </div>
+
+                <div class="bg-white rounded-2xl p-6 shadow-lg">
+                    <div class="flex items-center mb-4">
+                        <!-- User avatar representing Olivia S. -->
+                        <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=100&h=100" alt="Olivia S. avatar" class="w-12 h-12 rounded-full mr-3" />
+                        <div>
+                            <p class="font-semibold text-gray-900">Olivia S.</p>
+                        </div>
+                    </div>
+                    <blockquote class="text-gray-600 italic">
+                        "It's like having a personal chef in your pocket."
+                    </blockquote>
+                </div>
+                <!-- @END_MAP )) -->
+            </div>
+        </div>
+    </section>
+    <!-- @END_COMPONENT: Testimonials -->
+
+    <!-- @COMPONENT: Pricing Section -->
+    <section id="pricing" class="py-20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <div class="flex items-center justify-center mb-4">
+                    <i class="fas fa-credit-card text-chef-orange text-2xl mr-2"></i>
+                    <span class="text-chef-orange font-semibold uppercase tracking-wide">Pricing</span>
+                </div>
+                <h2 class="text-4xl lg:text-5xl font-bold text-gray-900 mb-6">
+                    Big Results, Small Price
+                </h2>
+                <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                    Explore all the core features at no cost. Upgrade to unlock advanced tools, unlimited AI recipes, and AI calorie tracking.
+                </p>
+            </div>
+
+            <!-- Billing Toggle -->
+            <div class="flex justify-center mb-12">
+                <div class="bg-chef-gray rounded-lg p-1 flex">
+                    <button class="px-4 py-2 bg-chef-orange text-white rounded-md font-medium">Monthly</button>
+                    <button class="px-4 py-2 text-gray-700 font-medium">Yearly</button>
+                </div>
+            </div>
+
+            <!-- Pricing Cards -->
+            <div class="grid lg:grid-cols-2 gap-8 max-w-4xl mx-auto">
+                <!-- Basic Plan -->
+                <div class="bg-white border-2 border-gray-200 rounded-2xl p-8">
+                    <div class="mb-6">
+                        <h3 class="text-2xl font-bold text-gray-900 mb-2">Basic</h3>
+                        <p class="text-chef-orange font-semibold">FREE FOREVER</p>
+                        <p class="text-gray-600 text-sm">No Credit Card Required</p>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <span class="text-5xl font-bold text-gray-900">$0</span>
+                        <span class="text-gray-600">/Monthly</span>
+                    </div>
+                    
+                    <ul class="space-y-3 mb-8">
+                        <li class="flex items-center">
+                            <i class="fas fa-check text-green-500 mr-3"></i>
+                            <span class="text-gray-700">Manual Calorie Tracking</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-check text-green-500 mr-3"></i>
+                            <span class="text-gray-700">10 Monthly Generations</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-check text-green-500 mr-3"></i>
+                            <span class="text-gray-700">Meal Plans up to 3 days</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-check text-green-500 mr-3"></i>
+                            <span class="text-gray-700">Save 5 Recipes in the Cookbook</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-check text-green-500 mr-3"></i>
+                            <span class="text-gray-700">Save 5 Recipes in the Shopping List</span>
+                        </li>
+                    </ul>
+                    
+                    <button class="w-full bg-gray-100 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-200 transition-colors">
+                        Get Started
+                    </button>
+                </div>
+
+                <!-- Pro Plan -->
+                <div class="bg-white border-2 border-chef-orange rounded-2xl p-8 relative">
+                    <div class="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                        <span class="bg-chef-orange text-white px-4 py-1 rounded-full text-sm font-medium">3 DAYS TRIAL</span>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <h3 class="text-2xl font-bold text-gray-900 mb-2">Pro</h3>
+                        <p class="text-gray-600">For those who need a Digital Personal Chef</p>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <span class="text-5xl font-bold text-gray-900">$12.99</span>
+                        <span class="text-gray-600">/Monthly</span>
+                    </div>
+                    
+                    <ul class="space-y-3 mb-8">
+                        <li class="flex items-center">
+                            <i class="fas fa-check text-green-500 mr-3"></i>
+                            <span class="text-gray-700">AI Calories Tracking</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-check text-green-500 mr-3"></i>
+                            <span class="text-gray-700">Unlimited Generations</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-check text-green-500 mr-3"></i>
+                            <span class="text-gray-700">History mode</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-check text-green-500 mr-3"></i>
+                            <span class="text-gray-700">Meal Plans up to 30 days</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-check text-green-500 mr-3"></i>
+                            <span class="text-gray-700">Daily Meal Plan Tracking</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-check text-green-500 mr-3"></i>
+                            <span class="text-gray-700">Unlimited Cookbook & Shopping Lists</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-check text-green-500 mr-3"></i>
+                            <span class="text-gray-700">No Ads</span>
+                        </li>
+                    </ul>
+                    
+                    <button class="w-full bg-chef-orange text-white py-3 rounded-lg font-semibold hover:bg-orange-600 transition-colors">
+                        Get Started
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- @END_COMPONENT: Pricing Section -->
+
+    <!-- @COMPONENT: Final CTA -->
+    <section class="py-20 bg-chef-gray">
+        <div class="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
+            <h2 class="text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
+                The perfect companion for your Kitchen.
+            </h2>
+            <h3 class="text-3xl font-bold text-gray-900 mb-12">
+                Sign up for free, today.
+            </h3>
+            
+            <div class="flex flex-col sm:flex-row justify-center gap-4 mb-8">
+                <!-- App Store Download -->
+                <a href="#" class="inline-flex items-center justify-center bg-black text-white px-6 py-3 rounded-lg hover:bg-gray-800 transition-colors">
+                    <i class="fab fa-apple mr-2"></i>
+                    Download on the App Store
+                </a>
+                <!-- Google Play Download -->
+                <a href="#" class="inline-flex items-center justify-center bg-black text-white px-6 py-3 rounded-lg hover:bg-gray-800 transition-colors">
+                    <i class="fab fa-google-play mr-2"></i>
+                    Get it on Google Play
+                </a>
+            </div>
+            
+            <button class="bg-chef-orange text-white px-8 py-4 rounded-lg text-lg font-semibold hover:bg-orange-600 transition-colors">
+                Get Started for free
+            </button>
+            <p class="text-gray-500 mt-2">No credit-card required</p>
+        </div>
+    </section>
+    <!-- @END_COMPONENT: Final CTA -->
+
+    <!-- @COMPONENT: Footer -->
+    <footer class="bg-gray-900 text-white py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid md:grid-cols-4 gap-8">
+                <div class="md:col-span-2">
+                    <div class="flex items-center space-x-2 mb-4">
+                        <div class="w-8 h-8 bg-chef-orange rounded-lg flex items-center justify-center">
+                            <i class="fas fa-utensils text-white text-sm"></i>
+                        </div>
+                        <span class="text-xl font-bold">ChefGPT</span>
+                    </div>
+                    <p class="text-gray-400 mb-4">
+                        AI-powered cooking companion that helps you create delicious meals and achieve your health goals faster.
+                    </p>
+                    <div class="flex space-x-4">
+                        <a href="#" class="text-gray-400 hover:text-white">
+                            <i class="fab fa-twitter"></i>
+                        </a>
+                        <a href="#" class="text-gray-400 hover:text-white">
+                            <i class="fab fa-facebook"></i>
+                        </a>
+                        <a href="#" class="text-gray-400 hover:text-white">
+                            <i class="fab fa-instagram"></i>
+                        </a>
+                    </div>
+                </div>
+                
+                <div>
+                    <h4 class="font-semibold mb-4">Features</h4>
+                    <ul class="space-y-2 text-gray-400">
+                        <li><a href="#" class="hover:text-white">PantryChef</a></li>
+                        <li><a href="#" class="hover:text-white">MealPlanChef</a></li>
+                        <li><a href="#" class="hover:text-white">MasterChef</a></li>
+                        <li><a href="#" class="hover:text-white">MacrosChef</a></li>
+                        <li><a href="#" class="hover:text-white">MixologyMaestro</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="font-semibold mb-4">Company</h4>
+                    <ul class="space-y-2 text-gray-400">
+                        <li><a href="#" class="hover:text-white">About</a></li>
+                        <li><a href="#" class="hover:text-white">Blog</a></li>
+                        <li><a href="#" class="hover:text-white">FAQ</a></li>
+                        <li><a href="#" class="hover:text-white">Support</a></li>
+                        <li><a href="#" class="hover:text-white">Privacy Policy</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
+                <p>&copy; 2024 ChefGPT. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+    <!-- @END_COMPONENT: Footer -->
+
+    <script>
+        // TODO: Implement business logic, API calls, or state management
+        
+        (function() {
+            // Smooth scrolling for navigation links
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const target = document.querySelector(this.getAttribute('href'));
+                    if (target) {
+                        target.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                    }
+                });
+            });
+
+            // Navbar scroll effect
+            let lastScrollY = window.scrollY;
+            const navbar = document.querySelector('nav');
+            
+            window.addEventListener('scroll', () => {
+                if (window.scrollY > lastScrollY) {
+                    navbar.style.transform = 'translateY(-100%)';
+                } else {
+                    navbar.style.transform = 'translateY(0)';
+                }
+                lastScrollY = window.scrollY;
+            });
+
+            // Add some interactive behavior to buttons
+            document.querySelectorAll('button').forEach(button => {
+                button.addEventListener('click', function(e) {
+                    // Add ripple effect
+                    const ripple = document.createElement('span');
+                    const rect = this.getBoundingClientRect();
+                    const size = Math.max(rect.width, rect.height);
+                    const x = e.clientX - rect.left - size / 2;
+                    const y = e.clientY - rect.top - size / 2;
+                    
+                    ripple.style.width = ripple.style.height = size + 'px';
+                    ripple.style.left = x + 'px';
+                    ripple.style.top = y + 'px';
+                    ripple.classList.add('ripple');
+                    
+                    this.appendChild(ripple);
+                    
+                    setTimeout(() => {
+                        ripple.remove();
+                    }, 600);
+                });
+            });
+        })();
+    </script>
+
+    <style>
+        .ripple {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(0);
+            animation: ripple-animation 0.6s linear;
+            pointer-events: none;
+        }
+
+        @keyframes ripple-animation {
+            to {
+                transform: scale(4);
+                opacity: 0;
+            }
+        }
+
+        nav {
+            transition: transform 0.3s ease;
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #F97316;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #EA580C;
+        }
+    </style>
+</body>
+</html>
